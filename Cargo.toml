@@ -1,0 +1,9 @@
+[package]
+name = "cluMultThreading"
+version = "0.1.0"
+authors = ["Денис Котляров <denis2005991@gmail.com>"]
+
+[dependencies]
+num_cpus = "*"
+
+cluLog = {git = "https://github.com/clucompany/cluLog"}
