@@ -1,90 +1,102 @@
 
 extern crate num_cpus;
 
-use std::sync::Arc;
+
+use mult_core_task::DebugFnBox;
+use mult_core_task::task::RunTask;
+use mult_core_task::ERunTask;
+use std::boxed::FnBox;
 use std::fmt::Debug;
 
 pub mod core;
-pub mod core_empty;
-pub mod core_destruct;
+pub mod empty_core;
 
 
-//type EmptyCore = core_empty::EmptyCore;
-//type EmptyMutCore = core_empty::MutEmptyCore;
+pub trait MultStatic<'a>: MultStat<'a> + MultThreadManager<'a> + MultTaskManager<'a> + MultDestruct<'a> + Debug {}
+pub trait MultExtend<'a>: Default + MultStat<'a> + MultThreadManager<'a> + MultTaskManager<'a> + MultDestruct<'a> + Debug {}
 
-type DefCore<'a> = core::UnStruct<'a>;
-type DefMutCore<'a> = core::MutStruct<'a>;
-
-/*
-pub fn empty() -> impl UnMutMultCore<EmptyMutCore> {
-     EmptyCore::new()     
-}
-*/
-
-/*
-pub fn threads<M: MutMultCore>(a: usize) -> Box<UnMutMultCore<M>> {
-     if a == 0 {
-          return Box::new(empty());
-     }
-
-     Box::new(DefCore::threads(a))
-}*/
-
-pub fn system_threads<'a>() -> impl UnMutMultCore<'a, DefMutCore<'a>> + 'a {
-     DefCore::threads(num_cpus::get())
+pub trait MultStat<'a>: Debug {
+	fn def_thread_len(&'a self) -> usize;
+	
+	fn as_count_threads(&'a self) -> &'a usize;
+	fn as_min_count_threads(&'a self) -> &'a usize;
 }
 
+pub trait MultThreadManager<'a>: MultStat<'a> + Debug {
+	fn add_thread(&'a self, count_threads: usize) -> Result<usize, ErrAddThread>;
+	fn del_thread(&'a self, count_threads: usize) -> Result<usize, ErrDelThread>;
 
-pub trait UnMutMultCore<'a, M: MutMultCore<'a, Self> + 'a>: Debug where Self: 'a + Sized {
-     fn def_thread_len(&self) -> usize;
-     fn lock_core(&'a self) -> M;
+	fn set_count_thread(&'a self, new_count: usize) -> Result<SetCountResult, ErrSetCount>;
+}
 
-     fn set_count_thread(self: &'a Arc<Self>, count: usize) -> Result<SetCountOk, SetCountErr> {
-		let mut lock = self.lock_core();
-		/*inf!("Connector threads {}->{}", lock_count, count);
-
-		if count < MinThreads {
-			return Some(SetCountResult::MinThreads(MinThreads));
-		}*/
-
-		lock.set_count_thread(self, count)
+pub trait MultTaskManager<'a>: Debug {
+	#[inline]
+	fn boxfn(&'a self, f: Box<FnBox()>) -> Result<(), ErrAddDistrib> {
+		self.add_erun(ERunTask::BoxFn(DebugFnBox::new(f)))
 	}
+	#[inline]
+	fn task(&'a self, f: Box<RunTask>) -> Result<(), ErrAddDistrib> {
+		self.add_erun(ERunTask::RunTask(f))
+	}
+	
+	fn add_erun(&'a self, e: ERunTask) -> Result<(), ErrAddDistrib>;
 }
 
-pub trait MutMultCore<'a, R: UnMutMultCore<'a, Self> + 'a>: Debug where Self: 'a + Sized {
-     fn set_count_thread(&mut self, root: &'a Arc<R>, a: usize) -> Result<SetCountOk, SetCountErr> {
-          /*if *lock_count == count {
+pub trait MultDestruct<'a>: MultStat<'a> + Debug {
+	fn destruct(&self);
+}
+
+
+/*
+		let lock_count = self.as_count_thread();
+		inf!("Connector threads {}->{}", lock_count, new_count);
+
+		if *lock_count == new_count {
 			warn!("Runnable, unknown set_count_threads count, len == count");
-			//ничего не делать, количество оки
-			return Ok(SetCountOk::Equally);
+			return Ok( SetCountResult::None );
 		}
 		
-		if *lock_count > count {
-			//уменьшить
-			let ncount = (*lock_count)-count;
-			return SetCountResult::DelThreads( self._del_thread(ncount, lock_count) );
+		if *lock_count > new_count {
+			let ncount = (*lock_count)-new_count;
+			return Ok( SetCountResult::DelThread( self.del_thread(new_count) ) );
 		}
-		//if *lock_count < count {
-			//увеличить
-			self._add_thread(count, lock_count);
-			return SetCountResult::AddThreads( count );
-		//}
-		//None
-		*/
+		Ok( SetCountResult::AddThread( self.add_thread(new_count) ) )
+	}
+	fn add_thread(&'a mut self, count_threads: usize) -> Result<usize, ErrAddThread>;
+	fn del_thread(&'a mut self, count_threads: usize) -> Result<usize, ErrDelThread>;
+*/
 
-		Err( SetCountErr::ErrMinThreads )
-     }
+
+#[derive(Debug)]
+pub enum ErrAddDistrib {
+	NotReady(ERunTask),
+	Overflow(ERunTask),
+}
+
+
+
+#[derive(Debug)]
+pub enum SetCountResult {
+	None(usize),
+     AddThread(Result<usize, ErrAddThread>),
+     DelThread(Result<usize, ErrDelThread>),
 }
 
 #[derive(Debug)]
-pub enum SetCountOk {
-     Equally,
-     AddThreads(usize),
-     DelThreads(usize),
+pub enum ErrSetCount {
+     ErrMinThreads {
+		new_count: usize,
+		min_threads: usize,
+	},
+}
+
+
+#[derive(Debug)]
+pub enum ErrAddThread {
+	NotAdded(usize),
 }
 
 #[derive(Debug)]
-pub enum SetCountErr {
-     ErrMinThreads,
+pub enum ErrDelThread {
+	NotDel(usize),
 }
-
