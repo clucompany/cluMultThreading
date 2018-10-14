@@ -1,7 +1,7 @@
 
 
 
-use mult_core_task::task::RunTask;
+use mult_core_task::run::RunTask;
 
 #[derive(Debug)]
 pub struct UnionTask<T: RunTask, T2: RunTask>(T, T2);

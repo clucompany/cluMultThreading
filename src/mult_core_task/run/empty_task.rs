@@ -1,15 +1,13 @@
 
-use mult_core_task::task::RunTask;
+use mult_core_task::run::RunTask;
 
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct EmptyTask;
 
-
-
 impl EmptyTask {
-     #[inline]
-     pub fn new() -> Self {
+     #[inline(always)]
+     pub const fn new() -> Self {
           EmptyTask
      }
 }

@@ -1,31 +1,16 @@
 
-pub mod task;
-pub mod empty_task;
-pub mod union_task;
-pub mod wait_task;
+pub mod run;
+pub mod fnbox;
 
-use std::ops::Deref;
-use mult_core_task::task::RunTask;
-use std::fmt::Formatter;
-use std::boxed::FnBox;
-use std::fmt::Debug;
-use std::fmt;
+use mult_core_task::run::RunTask;
+use mult_core_task::fnbox::DebugFnBox;
 
+pub type Task = ERunTask;
 
 #[derive(Debug)]
 pub enum ERunTask {
      BoxFn(DebugFnBox),
      RunTask(Box<RunTask>),
-     //TwoRunTask(Box<RunTask>, Box<RunTask>),
-     //ERunTask(Box<ERunTask>, Box<ERunTask>),
-
-     /*WaitUnlock(Thread),
-     WaitBoxFnUnlock(Thread, Box<FnBox()>),
-     WaitRunTaskUnlock(Thread, Box<RunTask>),
-     WaitTwoRunTaskUnlock(Thread, Box<RunTask>, Box<RunTask>),
-     WaitERunTaskUnlock(Thread, Box<ERunTask>, Box<ERunTask>),*/
-
-     MultDestruct,
 }
 
 impl ERunTask {
@@ -37,40 +22,7 @@ impl ERunTask {
                ERunTask::RunTask(mut a) => {
                     a.run();
                },
-               ERunTask::MultDestruct => {
-                    
-               },
           }
-     }
-}
-
-
-pub struct DebugFnBox(Box<FnBox()>);
-
-impl DebugFnBox {
-     #[inline]
-     pub fn new(f: Box<FnBox()>) -> Self {
-          DebugFnBox(f)
-     }
-
-     #[inline(always)]
-     pub fn run(self) {
-          self.0()
-     }
-}
-
-impl Deref for DebugFnBox {
-     type Target = Box<FnBox()>;
-
-     #[inline(always)]
-     fn deref<'a>(&'a self) -> &'a Self::Target {
-          &self.0
-     }
-}
-
-impl Debug for DebugFnBox {
-     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-          write!(f, "FnBox()")
      }
 }
 

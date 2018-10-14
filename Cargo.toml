@@ -5,6 +5,5 @@ authors = ["Денис Котляров <denis2005991@gmail.com>"]
 
 [dependencies]
 num_cpus = "1.8.0"
-
 cluLog = {git = "https://github.com/clucompany/cluLog"}
 

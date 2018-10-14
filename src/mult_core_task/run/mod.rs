@@ -1,7 +1,12 @@
 
 
+pub mod empty_task;
+pub mod union_task;
+pub mod wait_task;
+
+
+use self::union_task::UnionTask;
 use mult_core_task::ERunTask;
-use mult_core_task::union_task::UnionTask;
 use std::fmt::Debug;
 
 pub trait RunTask: Debug {
@@ -28,5 +33,7 @@ pub trait RunTask: Debug {
           ERunTask::RunTask(self)
      }
 }
+
+
 
 

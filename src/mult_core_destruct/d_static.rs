@@ -8,7 +8,7 @@ pub struct MultStaticDestruct;
 
 impl MultStaticDestruct {
      #[inline]
-     pub fn new() -> Self {
+     pub const fn new() -> Self {
           MultStaticDestruct
      }
 }

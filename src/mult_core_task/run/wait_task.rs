@@ -1,6 +1,7 @@
 
 use std::thread::Thread;
-use mult_core_task::task::RunTask;
+use mult_core_task::run::RunTask;
+
 
 
 #[derive(Debug)]
