@@ -3,15 +3,14 @@
 use std::marker::PhantomData;
 use std::ops::Deref;
 use mult_core::MultExtend;
-use std::sync::Arc;
 
 #[derive(Debug)]
-pub struct MultRootDestruct<'a, M: MultExtend<'a> + Sized + 'a>(Arc<M>, PhantomData<&'a ()>);
+pub struct MultRootDestruct<'a, M: MultExtend<'a> + Sized + 'a>(M, PhantomData<&'a ()>);
 
 
 impl<'a, M: MultExtend<'a> + Sized + 'a> MultRootDestruct<'a, M> {
      #[inline]
-     pub fn new(a: Arc<M>) -> Self {
+     pub fn new(a: M) -> Self {
           MultRootDestruct(a, PhantomData)
      }
 }

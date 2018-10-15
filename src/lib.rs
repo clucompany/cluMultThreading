@@ -7,6 +7,8 @@
 
 #[macro_use]
 extern crate cluLog;
+#[macro_use]
+extern crate enclose;
 
 pub mod mult_core;
 pub mod mult_core_static;

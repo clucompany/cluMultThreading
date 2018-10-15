@@ -6,11 +6,11 @@ use std::ops::Deref;
 use std::boxed::FnBox;
 use std::fmt;
 
-pub struct DebugFnBox(Box<FnBox()>);
+pub struct DebugFnBox(Box<FnBox() + Send>);
 
 impl DebugFnBox {
      #[inline(always)]
-     pub fn new(f: Box<FnBox()>) -> Self {
+     pub fn new(f: Box<FnBox() + Send>) -> Self {
           DebugFnBox(f)
      }
 
@@ -21,7 +21,7 @@ impl DebugFnBox {
 }
 
 impl Deref for DebugFnBox {
-     type Target = Box<FnBox()>;
+     type Target = Box<FnBox() + Send>;
 
      #[inline(always)]
      fn deref<'a>(&'a self) -> &'a Self::Target {

@@ -5,10 +5,8 @@ use mult_core::MultStatic;
 use mult_core_destruct::d_static::MultStaticDestruct;
 use mult_core::MultExtend;
 use mult_core_destruct::d_root::MultRootDestruct;
-use std::sync::Arc;
 
 pub trait MultRawDefault {
-	#[inline]
      fn new() -> Self where Self: Sized;
 
      fn thread(c: usize) -> Self where Self: Sized;
@@ -20,23 +18,23 @@ pub trait MultRawDefault {
      }
 }
 
-pub trait MultDefault where Self: MultRawDefault {
+pub trait MultDefault: MultRawDefault  {
 	#[inline]
 	fn root<'a>() -> MultRootDestruct<'a, Self> where Self: MultExtend<'a> + Sized {
 		MultRootDestruct::new(
-			Arc::new(Self::new())
+			Self::new()
 		)
 	}
 	#[inline]
 	fn root_thread<'a>(c: usize) -> MultRootDestruct<'a, Self> where Self: MultExtend<'a> + Sized {
 		MultRootDestruct::new(
-			Arc::new(Self::thread(c))
+			Self::thread(c)
 		)
 	}
 	#[inline]
 	fn root_sys<'a>() -> MultRootDestruct<'a, Self> where Self: MultExtend<'a> + Sized {
 		MultRootDestruct::new(
-			Arc::new(Self::sys())
+			Self::sys()
 		)
 	}
 

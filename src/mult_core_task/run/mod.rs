@@ -9,7 +9,7 @@ use self::union_task::UnionTask;
 use mult_core_task::ERunTask;
 use std::fmt::Debug;
 
-pub trait RunTask: Debug {
+pub trait RunTask: Debug + Send {
      fn run(&mut self);
 
      #[inline]

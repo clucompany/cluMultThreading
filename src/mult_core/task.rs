@@ -9,7 +9,7 @@ use mult_core_task::fnbox::DebugFnBox;
 
 pub trait MultTaskManager: Debug {
 	#[inline]
-	fn boxfn(&self, f: Box<FnBox()>) -> Result<(), ErrAddTask> {
+	fn boxfn(&self, f: Box<FnBox() + Send>) -> Result<(), ErrAddTask> {
 		self.task(ERunTask::BoxFn(DebugFnBox::new(f)))
 	}
 	#[inline]

@@ -9,10 +9,11 @@ use cluMultThreading::mult_core::default::MultDefault;
 
 pub fn main() {
      init_clulog!();
-
-     let drop = cluMultThreading::mul_core_behavior::portion::PortionCore::common_thread(10);
+     
+     let tasker = cluMultThreading::mul_core_behavior::portion::PortionCore::root();
+     
+     //let drop = cluMultThreading::mul_core_behavior::portion::PortionCore::common().unwrap();
 
      
-     //drop(12);
      
 }

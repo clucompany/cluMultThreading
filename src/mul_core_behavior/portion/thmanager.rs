@@ -1,41 +1,55 @@
 
+use std::sync::mpsc::SyncSender;
+use std::thread::JoinHandle;
+use mul_core_behavior::portion::comm::CommPartion;
 use mult_core::thread::ErrDelThread;
 use mul_core_behavior::portion::ArcPortionCore;
-use mul_core_behavior::portion::PortionCore;
 use mult_core::thread::ErrAddThread;
 use std::sync::Arc;
-use std::sync::Barrier;
+use std::time::Duration;
+use std::sync::atomic::Ordering;
+use std::sync::atomic::AtomicUsize;
+
 
 
 #[derive(Debug)]
 pub struct PortionThreadManager {
-     count_threads: usize
+     killer: SyncSender<usize>,
+
+     //all_threads: usize,
+     //active_threads: usize,
+     
+     //count_threads: usize,
+     flow_queue: usize,
+
+     //all_success: usize,
 }
 
 
 impl PortionThreadManager {
-     pub fn thread(c: usize, core: &Arc<ArcPortionCore>) -> Self {
-          let mut portion = Self {
-               count_threads: c
+     pub fn empty(flow_queue: usize, kill: SyncSender<usize>) -> Self {
+          let portion = Self {
+               killer: kill,
+
+               //all_threads: 0,
+               
+               //count_threads: 0,
+               flow_queue: flow_queue,
+
+               //all_success: 0,
           };
-          if c > 0 {
-               portion.add_thread(c, core);
-          }
+          /*if c > 0 {
+               let _e = portion.add_thread(c, core);
+          }*/
           
           portion
-     }
-
-
-     #[inline(always)]
-     pub fn as_count_threads<'a>(&'a self) -> &'a usize {
-          &self.count_threads
      }
 
      #[inline]
      pub fn add_thread(&mut self, c: usize, core: &Arc<ArcPortionCore>) -> Result<usize, ErrAddThread> {
           inf!("Portion: AddThread {}", c);
           if c > 0 {
-               return Ok( self._add_thread(c, core) );
+               return Ok( self._add_thread(c, core, false) );
           }
 
           Err( ErrAddThread::Empty(c) )
@@ -43,7 +57,7 @@ impl PortionThreadManager {
      #[inline]
      pub fn del_thread(&mut self, c: usize, core: &Arc<ArcPortionCore>) -> Result<usize, ErrDelThread> {
           inf!("Portion: DelThread {}", c);
-          if c >= self.count_threads {
+          if c >= core.count_threads.load(Ordering::Relaxed) {
                return Ok( self._del_thread(c, core) );
           }
 
@@ -51,27 +65,154 @@ impl PortionThreadManager {
      }
 
      fn _del_thread(&mut self, c: usize, core: &Arc<ArcPortionCore>) -> usize {
-          self.count_threads -= c;
+          //self.count_threads -= c;
           c
      }
 
-     fn _add_thread(&mut self, c: usize, core: &Arc<ArcPortionCore>) -> usize {
-          let barrier = Arc::new(Barrier::new(c));
+
+     fn _add_thread(&mut self, c: usize, core: &Arc<ArcPortionCore>, is_additional: bool) -> usize {
+          core.count_threads.fetch_add(c, Ordering::SeqCst);
+          core.all_count_threads.fetch_add(c, Ordering::SeqCst);
+          //self.all_threads += c;
           
           for mut num in 0..c {
-               num += self.count_threads;
+               //num += self.count_threads;
 
 
                inf!("Portion: Start thread, #{}", num);
-
-               ::std::thread::spawn(move || {
+               let flow_queue = self.flow_queue;
+               //let active = core.active_threads.clone();
+               ::std::thread::spawn(enclose!((core => core) move || {
+                    //let _num = num;
+                    let mut success = 0;
+                    let mut flow_queue = flow_queue;
                     
-               });
 
+                    {
+                         let mut arrel: Vec< CommPartion > = Vec::with_capacity(flow_queue);
+
+                         'l: loop {
+                              {
+                                   let lock = match core.recv.lock() {
+                                        Ok(a) => a,
+                                        Err(e) => e.into_inner()
+                                   };
+
+                                   for _a in 0..flow_queue {
+                                        if let Ok(a) = lock.try_recv() {
+                                             arrel.push(a);
+                                             continue;
+                                        }
+                                        break;
+                                   }
+                                   if arrel.len() == 0 {
+                                        if is_additional {
+                                             break 'l;
+                                        }
+                                        //break 'l;
+                                        core.waiting_threads.fetch_add(1, Ordering::SeqCst);
+
+                                        match lock.recv_timeout(Duration::from_millis(400)) {
+                                             Ok(a) => arrel.push(a),
+                                             Err(_e) => {
+                                                  core.waiting_threads.fetch_sub(1, Ordering::SeqCst);
+                                                  break 'l;
+                                             },
+                                        }
+                                        if flow_queue > 1 {
+                                             let f = flow_queue-1;
+                                             for _a in 0..f {
+                                                  if let Ok(a) = lock.try_recv() {
+                                                       arrel.push(a);
+                                                       continue;
+                                                  }
+                                                  break;
+                                             }
+                                        }
+                                        core.waiting_threads.fetch_sub(1, Ordering::SeqCst);
+                                   }
+                              }
+                              {
+                                   core.active_threads.fetch_add(1, Ordering::SeqCst);
+
+                                   let waiting_threads = core.waiting_threads.load(Ordering::SeqCst);
+                                   if waiting_threads == 0 {
+                                        let count_threads = core.count_threads.load(Ordering::SeqCst);
+                                        let active_threads = core.active_threads.load(Ordering::SeqCst);
+
+                                        if count_threads == active_threads {
+                                             let mut thread_manager = match core.thread_manager.lock() {
+                                                  Ok(a) => a,
+                                                  Err(e) => e.into_inner(),
+                                             };
+                                             thread_manager._add_thread(1, &core, true);
+                                        }
+                                   }
+                              }
+                              while let Some(recv) = arrel.pop() {
+                                   match recv {
+                                        CommPartion::Task(a) => {
+                                             success += 1;
+                                             a.run();
+                                        },
+                                        CommPartion::Kill => {
+                                             break 'l;
+                                        },
+                                        CommPartion::TransferQueue(mut vec) => {
+                                             arrel.append(&mut vec);
+                                        },
+
+                                        CommPartion::UpFlowQueue(a) => {
+                                             flow_queue = a;
+                                        }
+                                   }
+                              }
+                              {
+                                   core.active_threads.fetch_sub(1, Ordering::SeqCst);
+                              }
+                         };
+
+                         if arrel.len() > 0 {
+                              let lock = match core.send.lock() {
+                                   Ok(a) => a,
+                                   Err(e) => e.into_inner(),
+                              };
+                              let _e = lock.send(CommPartion::TransferQueue(arrel));
+
+                              if core.count_threads.load(Ordering::SeqCst) == 1 {
+                                   let mut thread_manager = match core.thread_manager.lock() {
+                                        Ok(a) => a,
+                                        Err(e) => e.into_inner(),
+                                   };
+                                   thread_manager._add_thread(1, &core, true);
+                              }
+                         }
+                         {
+                              
+                              //thread_manager.all_success += success;
+                              //thread_manager.count_threads -= 1;
+                              //thread_manager.active_threads -= 1;
+
+                              core.count_threads.fetch_sub(1, Ordering::SeqCst);
+                         }
+                         
+                    }
+                    let thread_manager = match core.thread_manager.lock() {
+                         Ok(a) => a,
+                         Err(e) => e.into_inner(),
+                    };
+                    if let Err(e) = thread_manager.killer.send(success) {
+                         err!("Portion Thread: Unable to send stream close information. {:?}", e);
+                         return;
+                    }
+                    
+               }));
+               //self.vec_threads.push(join);
                
           }
-          self.count_threads += c;
+          //std::thread::park();
+          //barrier.wait();
+
           c
      }
 }
-
