@@ -57,7 +57,7 @@ impl PortionThreadManager {
      #[inline]
      pub fn del_thread(&mut self, c: usize, core: &Arc<ArcPortionCore>) -> Result<usize, ErrDelThread> {
           inf!("Portion: DelThread {}", c);
-          if c >= core.count_threads.load(Ordering::Relaxed) {
+          if c <= core.count_threads.load(Ordering::SeqCst) {
                return Ok( self._del_thread(c, core) );
           }
 
@@ -66,6 +66,17 @@ impl PortionThreadManager {
 
      fn _del_thread(&mut self, c: usize, core: &Arc<ArcPortionCore>) -> usize {
           //self.count_threads -= c;
+          let lock = match core.send.lock() {
+               Ok(a) => a,
+               Err(e) => e.into_inner(),
+          };
+          for _a in 1..=c {
+               //println!("1");
+               if let Err(_e) = lock.send(CommPartion::Kill) {
+                    break;
+               }
+          }
+          //println!("End. c:{}, {}", c, core.count_threads.load(Ordering::SeqCst));
           c
      }
 
@@ -75,7 +86,7 @@ impl PortionThreadManager {
           core.all_count_threads.fetch_add(c, Ordering::SeqCst);
           //self.all_threads += c;
           
-          for mut num in 0..c {
+          for mut num in 1..=c {
                //num += self.count_threads;
 
 
@@ -93,6 +104,7 @@ impl PortionThreadManager {
 
                          'l: loop {
                               {
+                                   core.waiting_threads.fetch_add(1, Ordering::SeqCst);
                                    let lock = match core.recv.lock() {
                                         Ok(a) => a,
                                         Err(e) => e.into_inner()
@@ -110,7 +122,7 @@ impl PortionThreadManager {
                                              break 'l;
                                         }
                                         //break 'l;
-                                        core.waiting_threads.fetch_add(1, Ordering::SeqCst);
+                                        
 
                                         match lock.recv_timeout(Duration::from_millis(400)) {
                                              Ok(a) => arrel.push(a),
@@ -129,8 +141,9 @@ impl PortionThreadManager {
                                                   break;
                                              }
                                         }
-                                        core.waiting_threads.fetch_sub(1, Ordering::SeqCst);
+                                        
                                    }
+                                   core.waiting_threads.fetch_sub(1, Ordering::SeqCst);
                               }
                               {
                                    core.active_threads.fetch_add(1, Ordering::SeqCst);
@@ -197,6 +210,7 @@ impl PortionThreadManager {
                          }
                          
                     }
+                    inf!("Portion: EndThread #{}", num);
                     let thread_manager = match core.thread_manager.lock() {
                          Ok(a) => a,
                          Err(e) => e.into_inner(),

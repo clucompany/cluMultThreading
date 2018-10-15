@@ -9,9 +9,7 @@ use mult_core_task::Task;
 pub enum CommPartion {
      Task(Task),
      
-     Kill,
-     
-     
+     Kill,     
      TransferQueue(Vec<CommPartion>),
 
      UpFlowQueue(usize),

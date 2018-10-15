@@ -144,10 +144,10 @@ impl MultThreadManager for PortionCore {
      #[inline]
      fn set_count_thread(&self, new_count: usize) -> Result<SetCountResult, ErrSetCount> {
           let mut thread_manager = self._lock_thread_manager();
-
+          let threads = self.count_threads();
           {
                //let threads = thread_manager.as_count_threads();
-               let threads = self.count_threads();
+               
                inf!("Portion: SetThreads {}->{}", threads, new_count);
 
                if threads == new_count {
@@ -158,14 +158,14 @@ impl MultThreadManager for PortionCore {
                if threads > new_count {
                     let ncount = (threads)-new_count;
 
-                    match self.del_thread(ncount) {
+                    match thread_manager.del_thread(threads-new_count, &self.0) {
                          Err(e) => return Err(ErrSetCount::ErrDelThread(e)),
                          Ok(a) => return Ok(SetCountResult::Del(a)),
                     }
                }
           }
 
-          match thread_manager.add_thread(new_count, &self.0) {
+          match thread_manager.add_thread(new_count-threads, &self.0) {
                Err(e) => return Err(ErrSetCount::ErrAddThread(e)),
                Ok(a) => return Ok(SetCountResult::Add(a)),
           }
