@@ -1,15 +1,20 @@
 
 
-pub mod empty_task;
-pub mod union_task;
-pub mod wait_task;
+pub mod empty;
+pub mod union;
+pub mod wait;
+pub mod box_wait;
+pub mod wait_array;
+pub mod function;
 
 
-use self::union_task::UnionTask;
-use mult_core_task::ERunTask;
+
+use mult_core_task::run::wait::WaitTaskDisconnect;
+use mult_core_task::run::wait::WaitTask;
+use self::union::UnionTask;
 use std::fmt::Debug;
 
-pub trait RunTask: Debug + Send {
+pub trait RunTask: Debug + Send + Sync {
      fn run(&mut self);
 
      #[inline]
@@ -20,17 +25,11 @@ pub trait RunTask: Debug + Send {
      #[inline]
      fn union<T: RunTask + Sized >(self, t: T) -> UnionTask<Self, T> where Self: Sized {
           UnionTask::new(self, t)
-     }    
-     
-
-     #[inline]
-     fn erun(self) -> ERunTask where Self: Sized + 'static {
-          Self::b_erun(Box::new(self))
      }
 
      #[inline]
-     fn b_erun(self: Box<Self>) -> ERunTask where Self: Sized + 'static {
-          ERunTask::RunTask(self)
+     fn wait(self) -> (WaitTask<Self>, WaitTaskDisconnect) where Self: Sized {
+          WaitTask::new(self)
      }
 }
 

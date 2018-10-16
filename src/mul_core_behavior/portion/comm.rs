@@ -1,7 +1,4 @@
 
-use std::sync::Barrier;
-use std::sync::Arc;
-use std::thread::Thread;
 use mult_core_task::Task;
 
 
@@ -9,8 +6,10 @@ use mult_core_task::Task;
 pub enum CommPartion {
      Task(Task),
      
-     Kill,     
+     Kill,
      TransferQueue(Vec<CommPartion>),
+     TransferTask(Vec<Task>),
+     
 
      UpFlowQueue(usize),
 }

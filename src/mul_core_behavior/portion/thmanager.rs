@@ -1,6 +1,6 @@
 
+use mult_core_task::Task;
 use std::sync::mpsc::SyncSender;
-use std::thread::JoinHandle;
 use mul_core_behavior::portion::comm::CommPartion;
 use mult_core::thread::ErrDelThread;
 use mul_core_behavior::portion::ArcPortionCore;
@@ -8,7 +8,6 @@ use mult_core::thread::ErrAddThread;
 use std::sync::Arc;
 use std::time::Duration;
 use std::sync::atomic::Ordering;
-use std::sync::atomic::AtomicUsize;
 
 
 
@@ -162,24 +161,11 @@ impl PortionThreadManager {
                                         }
                                    }
                               }
-                              while let Some(recv) = arrel.pop() {
-                                   match recv {
-                                        CommPartion::Task(a) => {
-                                             success += 1;
-                                             a.run();
-                                        },
-                                        CommPartion::Kill => {
-                                             break 'l;
-                                        },
-                                        CommPartion::TransferQueue(mut vec) => {
-                                             arrel.append(&mut vec);
-                                        },
-
-                                        CommPartion::UpFlowQueue(a) => {
-                                             flow_queue = a;
-                                        }
-                                   }
+                              if Self::run_task(&mut success, &mut flow_queue, &mut arrel) {
+                                   break 'l;
                               }
+
+                              
                               {
                                    core.active_threads.fetch_sub(1, Ordering::SeqCst);
                               }
@@ -228,5 +214,36 @@ impl PortionThreadManager {
           //barrier.wait();
 
           c
+     }
+
+     #[inline(always)]
+     fn run_task(success: &mut usize, flow_queue: &mut usize, arrel: &mut Vec<CommPartion>) -> bool {
+          while let Some(recv) = arrel.pop() {
+               match recv {
+                    CommPartion::Task(mut a) => {
+                         *success += 1;
+                         a.run();
+                    },
+                    CommPartion::Kill => {
+                         return true;
+                    },
+                    CommPartion::TransferQueue(mut vec) => {
+                         if Self::run_task(success, flow_queue, &mut vec) {
+                              return true;
+                         }
+                    },
+                    CommPartion::TransferTask(mut a) => {
+                         while let Some(mut a) = a.pop() {
+                              *success += 1;
+                              a.run();
+                         }
+                    },
+
+                    CommPartion::UpFlowQueue(a) => {
+                         *flow_queue = a;
+                    }
+               }
+          }
+          false
      }
 }

@@ -1,5 +1,4 @@
 
-use std::sync::Arc;
 use mult_core_task::Task;
 use mult_core::destruct::MultDestruct;
 use mult_core::task::ErrAddTask;
@@ -66,8 +65,13 @@ impl MultThreadManager for MultEmptyCore {
 
 
 impl MultTaskManager for MultEmptyCore {
+     #[inline]
 	fn task(&self, e: Task) -> Result<(), ErrAddTask> {
           Err( ErrAddTask::NotReady(e) )
+     }
+     #[inline]
+     fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
+          Err( ErrAddTask::NotArrayReady(arr) )
      }
 }
 

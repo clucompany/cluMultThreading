@@ -1,6 +1,5 @@
 
 
-use std::sync::Arc;
 use std::fmt::Debug;
 use mult_core::stat::MultStat;
 

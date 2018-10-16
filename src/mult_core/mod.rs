@@ -14,7 +14,7 @@ use mult_core::default::MultDefault;
 use std::fmt::Debug;
 
 pub trait MultStatic<'a>: MultStat + MultTaskManager + MultDestruct + Debug {}
-pub trait MultExtend<'a>: MultDefault + MultThreadManager + MultStat + MultTaskManager + MultDestruct + Debug {}
+pub trait MultExtend<'a>: MultDefault + MultThreadManager + MultStat + MultTaskManager + MultDestruct + Debug + Sized {}
 
 
 

@@ -106,10 +106,6 @@ impl MultRawDefault for PortionCore {
                
                let _e = lock_thread_manager.add_thread(c, &arc_portion);
           }
-          // ************ 
-          // It is really safe! 
-          // Since in the case of using thread_manager there 
-          // is a lock from the inside while the manager is being replaced.
           
           PortionCore(arc_portion, kill_receiver)
      }
@@ -156,7 +152,7 @@ impl MultThreadManager for PortionCore {
                }
                
                if threads > new_count {
-                    let ncount = (threads)-new_count;
+                    //let ncount = (threads)-new_count;
 
                     match thread_manager.del_thread(threads-new_count, &self.0) {
                          Err(e) => return Err(ErrSetCount::ErrDelThread(e)),
@@ -169,8 +165,6 @@ impl MultThreadManager for PortionCore {
                Err(e) => return Err(ErrSetCount::ErrAddThread(e)),
                Ok(a) => return Ok(SetCountResult::Add(a)),
           }
-		//Ok( SetCountResult::AddThread( self.add_thread(new_count) ) 
-          //Ok( SetCountResult::Add(1) )
      }
 }
 
@@ -210,6 +204,17 @@ impl MultTaskManager for PortionCore {
           }
           
           
+
+          Ok( () )
+     }
+
+     fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
+          let lock_send = self._lock_send();
+          if let Err(e) = lock_send.send(CommPartion::TransferTask(arr)) {
+               if let CommPartion::Task(e) = e.0 {
+                    return Err( ErrAddTask::NotReady(e) );
+               }
+          }
 
           Ok( () )
      }
