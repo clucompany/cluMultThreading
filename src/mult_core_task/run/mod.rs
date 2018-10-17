@@ -3,7 +3,6 @@
 pub mod empty;
 pub mod union;
 pub mod wait;
-pub mod box_wait;
 pub mod wait_array;
 pub mod function;
 

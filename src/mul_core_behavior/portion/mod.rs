@@ -222,7 +222,7 @@ impl MultTaskManager for PortionCore {
 impl MultDestruct for PortionCore {
      fn destruct(&self) {
           inf!("Portion: Destruct");
-
+          
           let mut success = 0;
           let mut del_threads = 0;
           {
@@ -238,6 +238,8 @@ impl MultDestruct for PortionCore {
                               Ok(succ) => success += succ,
                               Err(e) => {
                                    err!("Portion: Failed to get channel for reporting closed threads. {:?}", e);
+                                   
+                                   #[allow(deprecated)]
                                    ::std::thread::sleep_ms(4000);
                                    return;
                               },
@@ -251,85 +253,6 @@ impl MultDestruct for PortionCore {
                }
           }
 
-          //let mut err_del_threads = 0;
-          /*{
-               let mut join;
-               loop {
-                    {
-                         let mut lock_thread_manager = self._lock_thread_manager();
-                         
-                         match lock_thread_manager.vec_threads.pop() {
-                              None => break,
-                              Some(th) => join = th,
-                         }
-                    }
-                    match join.join() {
-                         Ok(a) => success += a,
-                         _ => err_del_threads += 1,
-                    }
-                    del_threads += 1;
-                    /*if threads == 0 {
-                         break;
-                    }
-                    let barrier = Arc::new(Barrier::new(threads + 1));
-
-                    {
-                         let lock_send = self._lock_send();
-                         for a in 0..threads {
-                              lock_send.send(CommPartion::EndRoot(barrier.clone()));
-                         }
-                    }
-
-                    barrier.wait();
-                    println!("12");
-                    del_threads += threads;*/
-               }
-          }*/
-          
-          /*{
-               let mut threads;
-               let mut is_one = false;
-               loop {
-                    {
-                         let mut lock_thread_manager = self._lock_thread_manager();
-                         threads = *lock_thread_manager.as_count_threads();    
-                         //lock_thread_manager.flag_kills += threads;
-                    }
-                    match threads {
-                         0 => break,
-                         1 => {
-                              if !is_one {
-                                   let mut send = self._lock_send();
-                                   let _e = send.send(CommPartion::EndKillThread(::std::thread::current()));
-                                   is_one = true;
-                              }else {
-                                   let mut send = self._lock_send();
-                                   let _e = send.send(CommPartion::KillThread);
-                              }
-                         },
-                         _ => {
-                              let mut send = self._lock_send();
-
-                              if is_one == false {
-                                   threads -= 1;
-                                   for _a in 0..threads {
-                                        let _e = send.send(CommPartion::KillThread);
-                                   }
-                                   let _e = send.send(CommPartion::EndKillThread(::std::thread::current()));
-
-                                   is_one = true;
-                              }else {
-                                   for _a in 0..threads {
-                                        let _e = send.send(CommPartion::KillThread);
-                                   }
-                              }
-                         },
-                    }
-                    ::std::thread::park();
-                    del_threads += threads;
-               }
-          }*/
-          //let lock_thread_manager = self._lock_thread_manager();
           let all_count_threads = self.0.all_count_threads.load(Ordering::Relaxed);
           inf!("Portion: End. Threads {}, AllThreads {}, Success {}", 
                del_threads, 

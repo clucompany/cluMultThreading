@@ -1,14 +1,20 @@
 
 
+use std::sync::Arc;
+use std::sync::Condvar;
 use std::marker::PhantomData;
 use mult_core::task::ErrAddTask;
 use mult_core::MultExtend;
-use std::thread::Thread;
+use std::sync::Mutex;
 use mult_core_task::run::RunTask;
 
 
 #[derive(Debug)]
-pub struct WaitTask<'a, T: RunTask + 'a>(Thread, T, PhantomData<&'a ()>);
+pub struct WaitTask<'a, T: RunTask + 'a>(
+     Arc<(Mutex<bool>, Condvar)>,
+     T, 
+     PhantomData<&'a ()>,
+);
 
 
 impl<'a, T: RunTask + 'static> WaitTask<'a, T> {
@@ -24,13 +30,12 @@ impl<'a, T: RunTask + 'static> WaitTask<'a, T> {
 
 impl<'a, T: RunTask + 'a> WaitTask<'a, T> {
      pub fn new(t: T) -> (Self, WaitTaskDisconnect) {
-          Self::thread(std::thread::current(), t)
+          let arc = Arc::new((Mutex::new(false), Condvar::new()));
+
+          ( WaitTask(arc.clone(), t, PhantomData), WaitTaskDisconnect(arc) )
      }
 
-     #[inline]
-     pub fn thread(thread: Thread, t: T) -> (Self, WaitTaskDisconnect) {
-          ( WaitTask(thread.clone(), t, PhantomData), WaitTaskDisconnect(thread) )
-     }
+     
 }
 
 
@@ -38,17 +43,26 @@ impl<'a, T: RunTask + 'a> RunTask for WaitTask<'a, T> {
      #[inline(always)]
      fn run(&mut self) {
           self.1.run();
-          self.0.unpark();
+          
+          {
+               let mut lock = match (self.0).0.lock() {
+                    Ok(a) => a,
+                    Err(e) => e.into_inner(),
+               };
+               *lock = true;
+          }
+
+          (self.0).1.notify_one();
      }
 }
 
 
 #[derive(Debug)]
-pub struct WaitTaskDisconnect(Thread);
+pub struct WaitTaskDisconnect(Arc<(Mutex<bool>, Condvar)>);
 
 impl WaitTaskDisconnect {
      #[inline(always)]
-     pub fn drop(self) {
+     pub fn wait(self) {
 
      }
 }
@@ -56,6 +70,12 @@ impl WaitTaskDisconnect {
 impl Drop for WaitTaskDisconnect {
      #[inline]
      fn drop(&mut self) {
-          std::thread::park();
+          let mut lock = match (self.0).0.lock() {
+               Ok(a) => a,
+               Err(e) => e.into_inner(),
+          };
+          while !*lock {
+               lock = (self.0).1.wait(lock).unwrap();
+          }
      }
 }

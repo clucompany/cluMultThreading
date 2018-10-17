@@ -10,12 +10,14 @@ use cluMultThreading::mult_core_task::run::wait::WaitTask;
 #[allow(deprecated)]
 pub fn main() {
      init_clulog!();
-
+     
+     {
      let drop = cluMultThreading::mul_core_behavior::portion::PortionCore::root();
+
+     flush!();
      {
           let w = WaitTask::wait(&drop, TaskFn::new(
                || {
-                    trace!("Start 1");
                     ::std::thread::sleep_ms(1000);
 
                     trace!("End 1");
@@ -32,11 +34,12 @@ pub fn main() {
                }
           )).unwrap();
 
-          trace!("Ok!");
-          trace!("Ok2!");
-          flush!();
+          ::std::thread::sleep_ms(1000);
+          trace!("End.");
 
-          w.wait();
-          w2.wait();
+          flush!();
      }
+     
+     }
+     ::std::thread::current().unpark();
 }
