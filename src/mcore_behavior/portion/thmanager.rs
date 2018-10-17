@@ -1,10 +1,9 @@
 
-use mult_core_task::Task;
 use std::sync::mpsc::SyncSender;
-use mul_core_behavior::portion::comm::CommPartion;
-use mult_core::thread::ErrDelThread;
-use mul_core_behavior::portion::ArcPortionCore;
-use mult_core::thread::ErrAddThread;
+use mcore_behavior::portion::comm::CommPartion;
+use mcore::ErrDelThread;
+use mcore_behavior::portion::ArcPortionCore;
+use mcore::ErrAddThread;
 use std::sync::Arc;
 use std::time::Duration;
 use std::sync::atomic::Ordering;

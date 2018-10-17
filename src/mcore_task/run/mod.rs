@@ -1,16 +1,17 @@
 
 
-pub mod empty;
-pub mod union;
-pub mod wait;
-pub mod wait_array;
-pub mod function;
+mod empty;
+mod union;
+mod wait;
+mod wait_array;
+mod function;
 
+pub use self::empty::*;
+pub use self::union::*;
+pub use self::wait::*;
+pub use self::wait_array::*;
+pub use self::function::*;
 
-
-use mult_core_task::run::wait::WaitTaskDisconnect;
-use mult_core_task::run::wait::WaitTask;
-use self::union::UnionTask;
 use std::fmt::Debug;
 
 pub trait RunTask: Debug + Send + Sync {

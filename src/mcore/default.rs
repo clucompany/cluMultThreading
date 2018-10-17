@@ -1,10 +1,10 @@
 
 
 
-use mult_core::MultStatic;
-use mult_core_destruct::d_static::MultStaticDestruct;
-use mult_core::MultExtend;
-use mult_core_destruct::d_root::MultRootDestruct;
+use mcore::MultStatic;
+use mcore_destruct::MultStaticDestruct;
+use mcore::MultExtend;
+use mcore_destruct::MultRootDestruct;
 
 pub trait MultRawDefault {
      fn new() -> Self where Self: Sized;
@@ -40,16 +40,16 @@ pub trait MultDefault: MultRawDefault  {
 
 	#[inline]
 	fn common() -> Option<MultStaticDestruct> where Self: 'static + MultStatic<'static> + Sized {
-		::mult_core_static::set_move_mult_thread(Self::new())
+		::mcore_static::set_move_mult_thread(Self::new())
 	}
 
 	#[inline]
 	fn common_thread(c: usize) -> Option<MultStaticDestruct> where Self: 'static + MultStatic<'static> + Sized {
-		::mult_core_static::set_move_mult_thread(Self::thread(c))
+		::mcore_static::set_move_mult_thread(Self::thread(c))
 	}
 
 	#[inline]
 	fn common_sys() -> Option<MultStaticDestruct> where Self: 'static + MultStatic<'static> + Sized {
-		::mult_core_static::set_move_mult_thread(Self::sys())
+		::mcore_static::set_move_mult_thread(Self::sys())
 	}
 }

@@ -3,16 +3,16 @@
 extern crate cluMultThreading;
 
 
-use cluMultThreading::mult_core::MutCoreTrait;
-use cluMultThreading::mult_core::CoreTrait;
-use cluMultThreading::mult_core_constr::CoreConstructor;
+use cluMultThreading::mcore::MutCoreTrait;
+use cluMultThreading::mcore::CoreTrait;
+use cluMultThreading::mcore_constr::CoreConstructor;
 use std::sync::Arc;
 
 fn main() {
 
-     //let t = cluMultThreading::mult_core::core::DefMultCoo::
+     //let t = cluMultThreading::mcore::core::DefMultCoo::
      /*
-     let t = Arc::new(cluMultThreading::mult_core::core_empty::UnStruct::constructor( () ));
+     let t = Arc::new(cluMultThreading::mcore::core_empty::UnStruct::constructor( () ));
 
      let mut lock = t.lock_core();
      

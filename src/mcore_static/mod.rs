@@ -1,7 +1,7 @@
 
-use mul_core_behavior::empty::MultEmptyCore;
-use mult_core_destruct::d_static::MultStaticDestruct;
-use mult_core::MultStatic;
+use mcore_behavior::empty::MultEmptyCore;
+use mcore_destruct::MultStaticDestruct;
+use mcore::MultStatic;
 use std::sync::ONCE_INIT;
 use std::sync::Once;
 

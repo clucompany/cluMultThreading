@@ -10,19 +10,19 @@ extern crate cluLog;
 #[macro_use]
 extern crate enclose;
 
-pub mod mult_core;
-pub mod mult_core_static;
-pub mod mult_core_task;
-pub mod mult_core_destruct;
-pub mod mul_core_behavior;
+pub mod mcore;
+pub mod mcore_static;
+pub mod mcore_task;
+pub mod mcore_destruct;
+pub mod mcore_behavior;
 
-use mult_core::MultStatic;
+use mcore::MultStatic;
 
 
 
 #[inline(always)]
 pub fn as_mult_thread() -> &'static MultStatic<'static> {
-     mult_core_static::as_mult_thread()
+     mcore_static::as_mult_thread()
 }
 
 

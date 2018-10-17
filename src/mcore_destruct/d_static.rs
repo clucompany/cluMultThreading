@@ -1,10 +1,10 @@
 
-use mult_core::MultStatic;
-use mult_core::destruct::MultDestruct;
-use mult_core::task::ErrAddTask;
-use mult_core_task::Task;
-use mult_core::task::MultTaskManager;
-use mult_core::stat::MultStat;
+use mcore::MultStatic;
+use mcore::MultDestruct;
+use mcore::ErrAddTask;
+use mcore_task::Task;
+use mcore::MultTaskManager;
+use mcore::MultStat;
 
 
 #[derive(Debug)]
@@ -18,7 +18,7 @@ impl MultStaticDestruct {
 
      #[inline(always)]
      fn as_self(&self) -> &'static MultStatic<'static> {
-          ::mult_core_static::as_mult_thread()
+          ::mcore_static::as_mult_thread()
      }
 }
 

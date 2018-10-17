@@ -1,18 +1,18 @@
 
-use mult_core_task::Task;
-use mult_core::destruct::MultDestruct;
-use mult_core::task::ErrAddTask;
-use mult_core::task::MultTaskManager;
-use mult_core::thread::SetCountResult;
-use mult_core::thread::ErrSetCount;
-use mult_core::thread::ErrDelThread;
-use mult_core::thread::MultThreadManager;
-use mult_core::thread::ErrAddThread;
-use mult_core::stat::MultStat;
-use mult_core::default::MultDefault;
-use mult_core::default::MultRawDefault;
-use mult_core::MultExtend;
-use mult_core::MultStatic;
+use mcore_task::Task;
+use mcore::MultDestruct;
+use mcore::ErrAddTask;
+use mcore::MultTaskManager;
+use mcore::SetCountResult;
+use mcore::ErrSetCount;
+use mcore::ErrDelThread;
+use mcore::MultThreadManager;
+use mcore::ErrAddThread;
+use mcore::MultStat;
+use mcore::MultDefault;
+use mcore::MultRawDefault;
+use mcore::MultExtend;
+use mcore::MultStatic;
 
 
 #[derive(Debug)]

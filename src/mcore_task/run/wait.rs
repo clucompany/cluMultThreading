@@ -3,10 +3,10 @@
 use std::sync::Arc;
 use std::sync::Condvar;
 use std::marker::PhantomData;
-use mult_core::task::ErrAddTask;
-use mult_core::MultExtend;
+use mcore::ErrAddTask;
+use mcore::MultExtend;
 use std::sync::Mutex;
-use mult_core_task::run::RunTask;
+use mcore_task::run::RunTask;
 
 
 #[derive(Debug)]

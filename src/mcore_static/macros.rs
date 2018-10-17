@@ -17,13 +17,13 @@ macro_rules! mult {
 #[macro_export]
 macro_rules! as_mult {
 	() => (
-          $crate::mult_core_static::as_mult_thread()
+          $crate::mcore_static::as_mult_thread()
 	);
 }
 
 #[macro_export]
 macro_rules! set_mult {
 	($fmt:expr) => (
-          $crate::mult_core_static::set_boxed_mult_thread($fmt)
+          $crate::mcore_static::set_boxed_mult_thread($fmt)
 	);
 }

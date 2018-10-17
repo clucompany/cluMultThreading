@@ -1,16 +1,16 @@
 
-use mult_core::thread::MultThreadManager;
-use mult_core::thread::ErrSetCount;
-use mult_core::thread::SetCountResult;
-use mult_core::thread::ErrDelThread;
-use mult_core::thread::ErrAddThread;
-use mult_core::destruct::MultDestruct;
-use mult_core::task::ErrAddTask;
-use mult_core_task::Task;
-use mult_core::task::MultTaskManager;
-use mult_core::stat::MultStat;
+use mcore::MultThreadManager;
+use mcore::ErrSetCount;
+use mcore::SetCountResult;
+use mcore::ErrDelThread;
+use mcore::ErrAddThread;
+use mcore::MultDestruct;
+use mcore::ErrAddTask;
+use mcore_task::Task;
+use mcore::MultTaskManager;
+use mcore::MultStat;
 use std::marker::PhantomData;
-use mult_core::MultExtend;
+use mcore::MultExtend;
 
 #[derive(Debug)]
 pub struct MultRootDestruct<'a, M: MultExtend<'a> + Sized + 'a>(M, PhantomData<&'a ()>);

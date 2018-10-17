@@ -1,7 +1,7 @@
 
 
 use std::fmt::Debug;
-use mult_core::stat::MultStat;
+use mcore::stat::MultStat;
 
 pub trait MultThreadManager: MultStat + Debug {
 	fn add_thread(&self, count_threads: usize) -> Result<usize, ErrAddThread>;

@@ -1,18 +1,22 @@
 
-pub mod default;
-pub mod stat;
-pub mod destruct;
-pub mod task;
-pub mod thread;
+mod default;
+mod stat;
+mod destruct;
+mod task;
+mod thread;
 
+pub use self::default::*;
+pub use self::stat::*;
+pub use self::destruct::*;
+pub use self::task::*;
+pub use self::thread::*;
 
-use mult_core::thread::MultThreadManager;
-use mult_core::task::MultTaskManager;
-use mult_core::destruct::MultDestruct;
-use mult_core::stat::MultStat;
 use std::fmt::Debug;
 
+///Allows you to use the scheduler as a general scheduler. Generalizations with the requirement of Sized are not supported.
 pub trait MultStatic<'a>: MultStat + MultTaskManager + MultDestruct + Debug {}
+
+///Allows you to use the scheduler as a local scheduler. Additional advanced scheduling features are also supported.
 pub trait MultExtend<'a>: MultThreadManager + MultStat + MultTaskManager + MultDestruct + Debug + Sized {}
 
 

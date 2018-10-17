@@ -1,6 +1,6 @@
 
 
-use mult_core_task::Task;
+use mcore_task::Task;
 use std::fmt::Debug;
 
 

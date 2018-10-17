@@ -1,8 +1,8 @@
 
 
-use mult_core_task::run::RunTask;
+use mcore_task::run::RunTask;
 use std::thread::Thread;
-use mult_core_task::Task;
+use mcore_task::Task;
 
 
 #[derive(Debug)]

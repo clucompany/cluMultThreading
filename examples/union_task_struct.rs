@@ -1,8 +1,8 @@
 
 #[macro_use]
 extern crate cluMultThreading;
-use cluMultThreading::mult_core_task::run::RunTask;
-use cluMultThreading::mult_core_task::run::empty::EmptyTask;
+use cluMultThreading::mcore_task::RunTask;
+use cluMultThreading::mcore_task::EmptyTask;
 
 fn main() {
 
