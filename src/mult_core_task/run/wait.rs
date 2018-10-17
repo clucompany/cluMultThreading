@@ -1,30 +1,40 @@
 
 
+use std::marker::PhantomData;
+use mult_core::task::ErrAddTask;
+use mult_core::MultExtend;
 use std::thread::Thread;
 use mult_core_task::run::RunTask;
 
 
 #[derive(Debug)]
-pub struct WaitTask<T: RunTask>(Thread, T);
+pub struct WaitTask<'a, T: RunTask + 'a>(Thread, T, PhantomData<&'a ()>);
 
-impl<T: RunTask> WaitTask<T> {
+
+impl<'a, T: RunTask + 'static> WaitTask<'a, T> {
+     pub fn wait<'e, E: MultExtend<'e>>(mult: E, task: T) -> Result<WaitTaskDisconnect, ErrAddTask> {
+          let (task, disconnect) = WaitTask::new(task);
+		if let Err(e) = mult.task(task.boxed()) {
+			return Err(e);
+		}
+
+          Ok( disconnect )
+     }
+}
+
+impl<'a, T: RunTask + 'a> WaitTask<'a, T> {
      pub fn new(t: T) -> (Self, WaitTaskDisconnect) {
           Self::thread(std::thread::current(), t)
      }
 
      #[inline]
      pub fn thread(thread: Thread, t: T) -> (Self, WaitTaskDisconnect) {
-          ( WaitTask(thread.clone(), t), WaitTaskDisconnect(thread) )
-     }
-
-     #[inline(always)]
-     pub fn as_run(&mut self) -> &RunTask {
-          &self.1
+          ( WaitTask(thread.clone(), t, PhantomData), WaitTaskDisconnect(thread) )
      }
 }
 
 
-impl<T: RunTask> RunTask for WaitTask<T> {
+impl<'a, T: RunTask + 'a> RunTask for WaitTask<'a, T> {
      #[inline(always)]
      fn run(&mut self) {
           self.1.run();

@@ -1,6 +1,10 @@
 
-use std::ops::Deref;
 use mult_core::MultStatic;
+use mult_core::destruct::MultDestruct;
+use mult_core::task::ErrAddTask;
+use mult_core_task::Task;
+use mult_core::task::MultTaskManager;
+use mult_core::stat::MultStat;
 
 
 #[derive(Debug)]
@@ -11,21 +15,103 @@ impl MultStaticDestruct {
      pub const fn new() -> Self {
           MultStaticDestruct
      }
-}
-
-
-impl Deref for MultStaticDestruct {
-     type Target = MultStatic<'static>;
 
      #[inline(always)]
-     fn deref(&self) -> &Self::Target {
+     fn as_self(&self) -> &'static MultStatic<'static> {
           ::mult_core_static::as_mult_thread()
      }
 }
 
+
+impl<'a> MultStat for &'a MultStaticDestruct {
+     #[inline(always)]
+     fn count_threads(&self) -> usize {
+          self.as_self().count_threads()
+     }
+	
+	#[inline(always)]
+	fn def_count_threads(&self) -> usize {
+          self.as_self().def_count_threads()
+     }
+
+	#[inline(always)]
+	fn min_count_threads(&self) -> usize {
+		self.as_self().min_count_threads()
+	}
+
+	#[inline(always)]
+	fn max_count_threads(&self) -> usize {
+		self.as_self().max_count_threads()
+	}
+}
+
+
+impl MultStat for MultStaticDestruct {
+     #[inline(always)]
+     fn count_threads(&self) -> usize {
+          self.as_self().count_threads()
+     }
+	
+	#[inline(always)]
+	fn def_count_threads(&self) -> usize {
+          self.as_self().def_count_threads()
+     }
+
+	#[inline(always)]
+	fn min_count_threads(&self) -> usize {
+		self.as_self().min_count_threads()
+	}
+
+	#[inline(always)]
+	fn max_count_threads(&self) -> usize {
+		self.as_self().max_count_threads()
+	}
+}
+
+impl<'a> MultTaskManager for &'a MultStaticDestruct {
+     #[inline(always)]
+     fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
+		self.as_self().task_array(arr)
+	}
+
+     #[inline(always)]
+	fn task(&self, e: Task) -> Result<(), ErrAddTask> {
+          self.as_self().task(e)
+     }
+}
+
+impl MultTaskManager for MultStaticDestruct {
+     #[inline(always)]
+     fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
+		self.as_self().task_array(arr)
+	}
+
+     #[inline(always)]
+	fn task(&self, e: Task) -> Result<(), ErrAddTask> {
+          self.as_self().task(e)
+     }
+}
+
+impl<'a> MultDestruct for &'a MultStaticDestruct {
+     #[inline(always)]
+     fn destruct(&self) {
+          self.as_self().destruct()
+     }
+}
+
+impl<'a> MultDestruct for MultStaticDestruct {
+     #[inline(always)]
+     fn destruct(&self) {
+          self.as_self().destruct()
+     }
+}
+
+impl<'a> MultStatic<'a> for &'a MultStaticDestruct {}
+impl<'a> MultStatic<'a> for MultStaticDestruct {}
+
 impl Drop for MultStaticDestruct {
      #[inline(always)]
      fn drop(&mut self) {
-          self.destruct();
+          self.as_self().destruct();
      }
 }

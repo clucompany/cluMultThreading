@@ -10,11 +10,10 @@ use mult_core::thread::MultThreadManager;
 use mult_core::task::MultTaskManager;
 use mult_core::destruct::MultDestruct;
 use mult_core::stat::MultStat;
-use mult_core::default::MultDefault;
 use std::fmt::Debug;
 
 pub trait MultStatic<'a>: MultStat + MultTaskManager + MultDestruct + Debug {}
-pub trait MultExtend<'a>: MultDefault + MultThreadManager + MultStat + MultTaskManager + MultDestruct + Debug + Sized {}
+pub trait MultExtend<'a>: MultThreadManager + MultStat + MultTaskManager + MultDestruct + Debug + Sized {}
 
 
 

@@ -1,10 +1,8 @@
 
 
-
 use std::fmt::Debug;
-use mult_core::stat::MultStat;
 
-pub trait MultDestruct: MultStat + Debug {
+pub trait MultDestruct: Debug {
 	fn destruct(&self);
 }
 

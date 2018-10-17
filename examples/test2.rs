@@ -7,33 +7,22 @@ extern crate cluMultThreading;
 use cluMultThreading::mult_core_task::run::RunTask;
 use cluMultThreading::mult_core::default::MultDefault;
 use cluMultThreading::mult_core_task::run::function::TaskFn;
+use cluMultThreading::mult_core_task::run::wait::WaitTask;
 
 
 pub fn main() {
      init_clulog!();
      
-     let drop = cluMultThreading::mul_core_behavior::portion::PortionCore::common().unwrap();
+     let drop = cluMultThreading::mul_core_behavior::portion::PortionCore::root();
      
-     let w = drop.wait(TaskFn::new(
+     let w = WaitTask::wait(&drop, TaskFn::new(
           || {
                trace!("Test");
           }
      ));
-     println!("1");
-     drop(w);
-
-     /*for a in 0..30 {
-          let disconn = {
-               let (task, disconn) = TaskFn::new(
-                    || {
-                         trace!("Test");
-                    }
-               ).wait();
-               
-               
-               drop.task(task.boxed());
-          };
-     }*/
-     inf!("END");
-
+     let w2 = WaitTask::wait(drop, TaskFn::new(
+          || {
+               trace!("Test");
+          }
+     ));
 }

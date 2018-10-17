@@ -27,7 +27,6 @@ use mult_core::default::MultRawDefault;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::sync::atomic::AtomicUsize;
-use std::sync::Barrier;
 
 
 const MIN_THREAD_LEN: usize = 1;
@@ -344,7 +343,5 @@ impl MultDestruct for PortionCore {
 impl MultDefault for PortionCore {}
 impl<'a> MultStatic<'a> for PortionCore {}
 impl<'a> MultExtend<'a> for PortionCore {}
-
-
 
 

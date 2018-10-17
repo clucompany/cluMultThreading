@@ -28,7 +28,7 @@ pub trait RunTask: Debug + Send + Sync {
      }
 
      #[inline]
-     fn wait(self) -> (WaitTask<Self>, WaitTaskDisconnect) where Self: Sized {
+     fn wait<'a>(self) -> (WaitTask<'a, Self>, WaitTaskDisconnect) where Self: 'static + Sized {
           WaitTask::new(self)
      }
 }
