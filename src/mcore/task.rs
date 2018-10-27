@@ -30,6 +30,30 @@ pub trait MultTaskManager: Debug {
 }
 
 
+impl<'a, A: MultTaskManager> MultTaskManager for &'a A {
+	#[inline(always)]
+	fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
+		(**self).task_array(arr)
+	}
+
+	#[inline(always)]
+	fn task(&self, e: Task) -> Result<(), ErrAddTask> {
+		(**self).task(e)
+	}
+}
+
+impl<'a, A: MultTaskManager> MultTaskManager for &'a mut A {
+	#[inline(always)]
+	fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
+		(**self).task_array(arr)
+	}
+
+	#[inline(always)]
+	fn task(&self, e: Task) -> Result<(), ErrAddTask> {
+		(**self).task(e)
+	}
+}
+
 
 #[derive(Debug)]
 pub enum ErrAddTask {

@@ -1,4 +1,5 @@
 
+use std::ops::Deref;
 use mcore::MultStatic;
 use mcore::MultDestruct;
 use mcore::ErrAddTask;
@@ -23,26 +24,13 @@ impl MultStaticDestruct {
 }
 
 
-impl<'a> MultStat for &'a MultStaticDestruct {
+impl Deref for MultStaticDestruct {
+     type Target = MultStatic<'static>;
+
      #[inline(always)]
-     fn count_threads(&self) -> usize {
-          self.as_self().count_threads()
+     fn deref(&self) -> &Self::Target {
+          self.as_self()
      }
-	
-	#[inline(always)]
-	fn def_count_threads(&self) -> usize {
-          self.as_self().def_count_threads()
-     }
-
-	#[inline(always)]
-	fn min_count_threads(&self) -> usize {
-		self.as_self().min_count_threads()
-	}
-
-	#[inline(always)]
-	fn max_count_threads(&self) -> usize {
-		self.as_self().max_count_threads()
-	}
 }
 
 
@@ -68,18 +56,6 @@ impl MultStat for MultStaticDestruct {
 	}
 }
 
-impl<'a> MultTaskManager for &'a MultStaticDestruct {
-     #[inline(always)]
-     fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
-		self.as_self().task_array(arr)
-	}
-
-     #[inline(always)]
-	fn task(&self, e: Task) -> Result<(), ErrAddTask> {
-          self.as_self().task(e)
-     }
-}
-
 impl MultTaskManager for MultStaticDestruct {
      #[inline(always)]
      fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
@@ -92,13 +68,6 @@ impl MultTaskManager for MultStaticDestruct {
      }
 }
 
-impl<'a> MultDestruct for &'a MultStaticDestruct {
-     #[inline(always)]
-     fn destruct(&self) {
-          self.as_self().destruct()
-     }
-}
-
 impl<'a> MultDestruct for MultStaticDestruct {
      #[inline(always)]
      fn destruct(&self) {
@@ -106,7 +75,6 @@ impl<'a> MultDestruct for MultStaticDestruct {
      }
 }
 
-impl<'a> MultStatic<'a> for &'a MultStaticDestruct {}
 impl<'a> MultStatic<'a> for MultStaticDestruct {}
 
 impl Drop for MultStaticDestruct {

@@ -2,8 +2,8 @@
 #![feature(arbitrary_self_types)]
 #![feature(fnbox)]
 
-#![feature(min_const_fn)]
 #![feature(const_fn)]
+#![feature(associated_type_defaults)]
 
 #[macro_use]
 extern crate cluLog;

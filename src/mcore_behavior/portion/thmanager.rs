@@ -55,7 +55,7 @@ impl PortionThreadManager {
      #[inline]
      pub fn del_thread(&mut self, c: usize, core: &Arc<ArcPortionCore>) -> Result<usize, ErrDelThread> {
           inf!("Portion: DelThread {}", c);
-          if c <= core.count_threads.load(Ordering::SeqCst) {
+          if c < core.count_threads.load(Ordering::SeqCst) {
                return Ok( self._del_thread(c, core) );
           }
 

@@ -21,6 +21,14 @@ pub trait MultExtend<'a>: MultThreadManager + MultStat + MultTaskManager + MultD
 
 
 
+impl<'a, A: MultStatic<'a>> MultStatic<'a> for &'a A {}
+impl<'a, A: MultStatic<'a>> MultStatic<'a> for &'a mut A {}
+
+impl<'a, A: MultExtend<'a>> MultExtend<'a> for &'a A {}
+impl<'a, A: MultExtend<'a>> MultExtend<'a> for &'a mut A {}
+
+
+
 
 /*
 		let lock_count = self.as_count_thread();

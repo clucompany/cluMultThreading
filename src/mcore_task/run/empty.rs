@@ -2,7 +2,7 @@
 use mcore_task::run::RunTask;
 
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct EmptyTask;
 
 impl EmptyTask {

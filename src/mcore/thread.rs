@@ -10,6 +10,43 @@ pub trait MultThreadManager: MultStat + Debug {
 	fn set_count_thread(&self, new_count: usize) -> Result<SetCountResult, ErrSetCount>;
 }
 
+
+impl<'a, A: MultThreadManager> MultThreadManager for &'a A {
+	#[inline(always)]
+	fn add_thread(&self, count_threads: usize) -> Result<usize, ErrAddThread> {
+		(*self).add_thread(count_threads)
+	}
+
+	#[inline(always)]
+	fn del_thread(&self, count_threads: usize) -> Result<usize, ErrDelThread> {
+		(*self).del_thread(count_threads)
+	}
+
+	#[inline(always)]
+	fn set_count_thread(&self, new_count: usize) -> Result<SetCountResult, ErrSetCount> {
+		(*self).set_count_thread(new_count)
+	}
+}
+
+
+impl<'a, A: MultThreadManager> MultThreadManager for &'a mut A {
+	#[inline(always)]
+	fn add_thread(&self, count_threads: usize) -> Result<usize, ErrAddThread> {
+		(**self).add_thread(count_threads)
+	}
+
+	#[inline(always)]
+	fn del_thread(&self, count_threads: usize) -> Result<usize, ErrDelThread> {
+		(**self).del_thread(count_threads)
+	}
+
+	#[inline(always)]
+	fn set_count_thread(&self, new_count: usize) -> Result<SetCountResult, ErrSetCount> {
+		(**self).set_count_thread(new_count)
+	}
+}
+
+
 #[derive(Debug)]
 pub enum SetCountResult {
 	None(usize),

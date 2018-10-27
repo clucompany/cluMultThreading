@@ -35,4 +35,10 @@ impl<T: RunTask, T2: RunTask> RunTask for UnionTask<T, T2> {
      }
 }
 
+impl<'a, T: RunTask + Clone, T2: RunTask + Clone> Clone for UnionTask<T, T2> {
+     #[inline]
+     fn clone(&self) -> Self {
+          Self::new(self.0.clone(), self.1.clone())
+     }
+}
 

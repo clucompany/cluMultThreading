@@ -73,12 +73,14 @@ impl PortionCore {
 }
 
 impl MultRawDefault for PortionCore {
+     type NewRes = Self;
+
      #[inline]
-     fn new() -> Self {
+     fn new() -> Self::NewRes {
           Self::thread(MIN_THREAD_LEN)
      }
 
-     fn thread(c: usize) -> Self {
+     fn thread(c: usize) -> Self::NewRes {
           let (kill_sender, kill_receiver) = sync_channel(KILL_TURN_SEND_MESS);
           let (sender, receiver) = channel();
 
@@ -153,6 +155,7 @@ impl MultThreadManager for PortionCore {
                if threads > new_count {
                     //let ncount = (threads)-new_count;
 
+                    inf!("Portion: SetThreads {}->{}, Del {}", threads, new_count, threads-new_count);
                     match thread_manager.del_thread(threads-new_count, &self.0) {
                          Err(e) => return Err(ErrSetCount::ErrDelThread(e)),
                          Ok(a) => return Ok(SetCountResult::Del(a)),
@@ -160,7 +163,8 @@ impl MultThreadManager for PortionCore {
                }
           }
 
-          match thread_manager.add_thread(new_count-threads, &self.0) {
+          inf!("Portion: SetThreads {}->{}, Add {}", threads, new_count, new_count-threads);
+          match thread_manager.add_thread(1+(new_count-threads), &self.0) {
                Err(e) => return Err(ErrSetCount::ErrAddThread(e)),
                Ok(a) => return Ok(SetCountResult::Add(a)),
           }
@@ -263,7 +267,7 @@ impl MultDestruct for PortionCore {
 }
 
 
-impl MultDefault for PortionCore {}
+impl MultDefault<Self> for PortionCore {}
 impl<'a> MultStatic<'a> for PortionCore {}
 impl<'a> MultExtend<'a> for PortionCore {}
 

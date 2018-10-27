@@ -23,16 +23,18 @@ impl MultEmptyCore {
 }
 
 impl MultRawDefault for MultEmptyCore {
+     type NewRes = MultEmptyCore;
+
      #[inline(always)]
-     fn new() -> Self {
+     fn new() -> Self::NewRes {
           MultEmptyCore
      }
      #[inline(always)]
-     fn thread(_c: usize) -> Self {
+     fn thread(_c: usize) -> Self::NewRes {
           MultEmptyCore
      }
      #[inline(always)]
-     fn sys() -> Self {
+     fn sys() -> Self::NewRes {
           MultEmptyCore
      }
 }
@@ -82,6 +84,6 @@ impl MultDestruct for MultEmptyCore {
      }
 }
 
-impl MultDefault for MultEmptyCore {}
+impl MultDefault<MultEmptyCore> for MultEmptyCore {}
 impl<'a> MultExtend<'a> for MultEmptyCore {}
 impl<'a> MultStatic<'a> for MultEmptyCore {}
