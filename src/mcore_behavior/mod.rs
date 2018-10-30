@@ -1,3 +1,7 @@
 
-pub mod empty;
-pub mod portion;
+mod empty;
+mod portion;
+
+
+pub use self::empty::*;
+pub use self::portion::*;

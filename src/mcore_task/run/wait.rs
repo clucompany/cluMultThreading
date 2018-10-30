@@ -7,6 +7,7 @@ use mcore::ErrAddTask;
 use mcore::MultExtend;
 use std::sync::Mutex;
 use mcore_task::run::RunTask;
+use mcore_task::run::RunTaskExtension;
 
 
 #[derive(Debug)]

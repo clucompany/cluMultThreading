@@ -15,7 +15,7 @@ use mcore::MultExtend;
 use mcore::MultStatic;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MultEmptyCore;
 
 impl MultEmptyCore {
@@ -52,16 +52,36 @@ impl MultStat for MultEmptyCore {
 }
 
 impl MultThreadManager for MultEmptyCore {
+     #[inline(always)]
      fn add_thread(&self, count_threads: usize) -> Result<usize, ErrAddThread> {
           Ok( count_threads )
      }
+
+     #[inline(always)]
 	fn del_thread(&self, count_threads: usize) -> Result<usize, ErrDelThread> {
           Ok( count_threads )
      }
 
-	fn set_count_thread(&self, new_count: usize) -> Result<SetCountResult, ErrSetCount> {
+     #[inline(always)]
+	fn set_count_thread(&self, count_threads: usize) -> Result<SetCountResult, ErrSetCount> {
           //Err( ErrSetCount::ErrMinThreads{to: new_count, this: 0, min: 0} )
-          Ok( SetCountResult::None(new_count) )
+          Ok( SetCountResult::None(count_threads) )
+     }
+
+     #[inline(always)]
+     fn async_add_thread(&self, count_threads: usize) -> Result<usize, ErrAddThread> {
+          Ok( count_threads )
+     }
+
+     #[inline(always)]
+	fn async_del_thread(&self, count_threads: usize) -> Result<usize, ErrDelThread> {
+          Ok( count_threads )
+     }
+
+     #[inline(always)]
+	fn async_set_count_thread(&self, count_threads: usize) -> Result<SetCountResult, ErrSetCount> {
+          //Err( ErrSetCount::ErrMinThreads{to: new_count, this: 0, min: 0} )
+          Ok( SetCountResult::None(count_threads) )
      }
 }
 

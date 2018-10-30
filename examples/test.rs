@@ -12,7 +12,7 @@ use cluMultThreading::mcore::MultDefault;
 pub fn main() {
      init_clulog!();
      
-     let tasker = cluMultThreading::mcore_behavior::portion::PortionCore::root();
+     let tasker = cluMultThreading::mcore_behavior::PortionCore::root();
      println!("Def threads, {}", tasker.count_threads());
      tasker.add_thread(1).unwrap();
      tasker.set_count_thread(5).unwrap();

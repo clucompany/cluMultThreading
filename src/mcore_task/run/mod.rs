@@ -16,19 +16,34 @@ use std::fmt::Debug;
 
 pub trait RunTask: Debug + Send + Sync {
      fn run(&mut self);
+}
 
+impl<'a, A: RunTask> RunTask for &'a mut A {
+     #[inline(always)]
+     fn run(&mut self) {
+          (**self).run()
+     }
+}
+
+
+pub trait RunTaskExtension: RunTask + Sized {
      #[inline]
-     fn boxed(self) -> Box<Self> where Self: Sized {
+     fn boxed(self) -> Box<Self> {
           Box::new(self)
      }
      
      #[inline]
-     fn union<T: RunTask + Sized >(self, t: T) -> UnionTask<Self, T> where Self: Sized {
+     fn union<T: RunTask>(self, t: T) -> UnionTask<Self, T> {
           UnionTask::new(self, t)
      }
 
      #[inline]
-     fn wait<'a>(self) -> (WaitTask<'a, Self>, WaitTaskDisconnect) where Self: 'static + Sized {
+     fn wait<'a>(self) -> (WaitTask<'a, Self>, WaitTaskDisconnect) where Self: 'static {
           WaitTask::new(self)
      }
+}
+
+
+impl<'a, R: RunTask> RunTaskExtension for R {
+
 }

@@ -9,12 +9,12 @@ use mcore::MultStat;
 
 
 #[derive(Debug)]
-pub struct MultStaticDestruct;
+pub struct StaticDestruct;
 
-impl MultStaticDestruct {
+impl StaticDestruct {
      #[inline]
      pub const fn new() -> Self {
-          MultStaticDestruct
+          StaticDestruct
      }
 
      #[inline(always)]
@@ -24,7 +24,7 @@ impl MultStaticDestruct {
 }
 
 
-impl Deref for MultStaticDestruct {
+impl Deref for StaticDestruct {
      type Target = MultStatic<'static>;
 
      #[inline(always)]
@@ -34,7 +34,7 @@ impl Deref for MultStaticDestruct {
 }
 
 
-impl MultStat for MultStaticDestruct {
+impl MultStat for StaticDestruct {
      #[inline(always)]
      fn count_threads(&self) -> usize {
           self.as_self().count_threads()
@@ -56,7 +56,7 @@ impl MultStat for MultStaticDestruct {
 	}
 }
 
-impl MultTaskManager for MultStaticDestruct {
+impl MultTaskManager for StaticDestruct {
      #[inline(always)]
      fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
 		self.as_self().task_array(arr)
@@ -68,16 +68,16 @@ impl MultTaskManager for MultStaticDestruct {
      }
 }
 
-impl<'a> MultDestruct for MultStaticDestruct {
+impl<'a> MultDestruct for StaticDestruct {
      #[inline(always)]
      fn destruct(&self) {
           self.as_self().destruct()
      }
 }
 
-impl<'a> MultStatic<'a> for MultStaticDestruct {}
+impl<'a> MultStatic<'a> for StaticDestruct {}
 
-impl Drop for MultStaticDestruct {
+impl Drop for StaticDestruct {
      #[inline(always)]
      fn drop(&mut self) {
           self.as_self().destruct();

@@ -1,13 +1,17 @@
 
-pub mod thmanager;
-pub mod comm;
+mod comm;
+mod th;
+mod wait_atomic;
 
+use mcore_behavior::portion::th::feedback::EndThreadInfo;
+use std::sync::mpsc::SyncSender;
+use mcore_behavior::portion::wait_atomic::WaitAtomic;
+use mcore_behavior::portion::th::PortionThreadManager;
 use std::sync::mpsc::sync_channel;
 use mcore_behavior::portion::comm::CommPartion;
 use mcore::MultExtend;
 use mcore::MultDestruct;
 use mcore::MultStatic;
-use mcore_behavior::portion::thmanager::PortionThreadManager;
 use std::sync::MutexGuard;
 use mcore::ErrAddTask;
 use mcore::MultTaskManager;
@@ -17,8 +21,6 @@ use std::sync::mpsc::Receiver;
 use std::sync::mpsc::Sender;
 use std::sync::Mutex;
 use mcore::MultStat;
-use mcore::ErrSetCount;
-use mcore::SetCountResult;
 use mcore::ErrDelThread;
 use mcore::MultThreadManager;
 use mcore::ErrAddThread;
@@ -27,6 +29,7 @@ use mcore::MultRawDefault;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::sync::atomic::AtomicUsize;
+use self::th::thread_status::ThreadStatus;
 
 
 const MIN_THREAD_LEN: usize = 1;
@@ -35,7 +38,7 @@ const KILL_TURN_SEND_MESS: usize = 3;
 
 
 #[derive(Debug)]
-pub struct PortionCore(Arc<ArcPortionCore>, Receiver<usize>);
+pub struct PortionCore(Arc<ArcPortionCore>, Receiver<EndThreadInfo>);
 
 #[derive(Debug)]
 pub struct ArcPortionCore {
@@ -52,25 +55,70 @@ pub struct ArcPortionCore {
 
 	//Получение заданий
 	recv: Mutex<Receiver< CommPartion >>, 
+
+
+     killer: Mutex<SyncSender<EndThreadInfo>>,
 }
 
 
 impl PortionCore {
+     
+
+     
+}
+
+impl ArcPortionCore {
      #[inline(always)]
-     fn _lock_send<'l>(&'l self) -> MutexGuard<'l, Sender<CommPartion>> {
-          match self.0.send.lock() {
+     pub (crate) fn _add_count_threads<'a>(&'a self) -> WaitAtomic<'a> {
+          WaitAtomic::new(&self.count_threads, Ordering::SeqCst)
+     }
+     #[inline(always)]
+     pub (crate) fn _add_count_threads_no_init<'a>(&'a self) -> WaitAtomic<'a> {
+          WaitAtomic::new(&self.count_threads, Ordering::SeqCst)
+     }
+
+     #[inline(always)]
+     pub (crate) fn _add_wait_threads<'a>(&'a self) -> WaitAtomic<'a> {
+          WaitAtomic::new(&self.waiting_threads, Ordering::SeqCst)
+     }
+     #[inline(always)]
+     pub (crate) fn _add_active_threads<'a>(&'a self) -> WaitAtomic<'a> {
+          WaitAtomic::new(&self.active_threads, Ordering::SeqCst)
+     }
+
+     #[inline(always)]
+     pub (crate) fn _lock_send<'l>(&'l self) -> MutexGuard<'l, Sender<CommPartion>> {
+          match self.send.lock() {
                Ok(a) => a,
                Err(e) => e.into_inner(),
           }
      }
+
      #[inline(always)]
-     fn _lock_thread_manager<'l>(&'l self) -> MutexGuard<'l, PortionThreadManager> {
-          match self.0.thread_manager.lock() {
+     pub (crate) fn _lock_recv<'l>(&'l self) -> MutexGuard<'l, Receiver<CommPartion>> {
+          match self.recv.lock() {
+               Ok(a) => a,
+               Err(e) => e.into_inner(),
+          }
+     }
+
+     #[inline(always)]
+     pub (crate) fn _lock_thread_manager<'l>(&'l self) -> MutexGuard<'l, PortionThreadManager> {
+          match self.thread_manager.lock() {
+               Ok(a) => a,
+               Err(e) => e.into_inner(),
+          }
+     }
+
+     #[inline(always)]
+     pub (crate) fn _lock_killer<'l>(&'l self) -> MutexGuard<'l, SyncSender<EndThreadInfo>> {
+          match self.killer.lock() {
                Ok(a) => a,
                Err(e) => e.into_inner(),
           }
      }
 }
+
 
 impl MultRawDefault for PortionCore {
      type NewRes = Self;
@@ -84,7 +132,7 @@ impl MultRawDefault for PortionCore {
           let (kill_sender, kill_receiver) = sync_channel(KILL_TURN_SEND_MESS);
           let (sender, receiver) = channel();
 
-          let thread_manager = PortionThreadManager::empty(10, kill_sender);
+          let thread_manager = PortionThreadManager::empty(10);
 
           let arc_portion = Arc::new(
                ArcPortionCore {
@@ -97,15 +145,14 @@ impl MultRawDefault for PortionCore {
                     send: Mutex::new(sender),
 
                     recv: Mutex::new(receiver),
+
+                    killer: Mutex::new(kill_sender),
                }
           );
-          {
-               let mut lock_thread_manager = match arc_portion.thread_manager.lock() {
-                    Ok(a) => a,
-                    Err(e) => e.into_inner(),
-               };
-               
-               let _e = lock_thread_manager.add_thread(c, &arc_portion);
+          if c > 0{
+               inf!("AsyncStartAddThread {}", c);
+               let mut lock_thread_manager = arc_portion._lock_thread_manager();
+               let _e = lock_thread_manager._async_add_thread(c, &arc_portion, ThreadStatus::Master);
           }
           
           PortionCore(arc_portion, kill_receiver)
@@ -131,43 +178,23 @@ impl MultThreadManager for PortionCore {
      #[inline]
      fn add_thread(&self, count_threads: usize) -> Result<usize, ErrAddThread> {
           //inf!("Portion: AddThread {}", count_threads);
-		self._lock_thread_manager().add_thread(count_threads, &self.0)
+		self.0._lock_thread_manager().add_thread(count_threads, &self.0)
      }
      #[inline]
      fn del_thread(&self, count_threads: usize) -> Result<usize, ErrDelThread> {
           //inf!("Portion: DelThread {}", count_threads);
-		self._lock_thread_manager().del_thread(count_threads, &self.0)
+		self.0._lock_thread_manager().del_thread(count_threads, &self.0)
+     }
+
+     #[inline]
+     fn async_add_thread(&self, count_threads: usize) -> Result<usize, ErrAddThread> {
+          //inf!("Portion: AddThread {}", count_threads);
+		self.0._lock_thread_manager().async_add_thread(count_threads, &self.0)
      }
      #[inline]
-     fn set_count_thread(&self, new_count: usize) -> Result<SetCountResult, ErrSetCount> {
-          let mut thread_manager = self._lock_thread_manager();
-          let threads = self.count_threads();
-          {
-               //let threads = thread_manager.as_count_threads();
-               
-               inf!("Portion: SetThreads {}->{}", threads, new_count);
-
-               if threads == new_count {
-                    warn!("Runnable, unknown set_count_threads count, len == count");
-                    return Ok( SetCountResult::None(new_count) );
-               }
-               
-               if threads > new_count {
-                    //let ncount = (threads)-new_count;
-
-                    inf!("Portion: SetThreads {}->{}, Del {}", threads, new_count, threads-new_count);
-                    match thread_manager.del_thread(threads-new_count, &self.0) {
-                         Err(e) => return Err(ErrSetCount::ErrDelThread(e)),
-                         Ok(a) => return Ok(SetCountResult::Del(a)),
-                    }
-               }
-          }
-
-          inf!("Portion: SetThreads {}->{}, Add {}", threads, new_count, new_count-threads);
-          match thread_manager.add_thread(1+(new_count-threads), &self.0) {
-               Err(e) => return Err(ErrSetCount::ErrAddThread(e)),
-               Ok(a) => return Ok(SetCountResult::Add(a)),
-          }
+     fn async_del_thread(&self, count_threads: usize) -> Result<usize, ErrDelThread> {
+          //inf!("Portion: DelThread {}", count_threads);
+		self.0._lock_thread_manager().async_del_thread(count_threads, &self.0)
      }
 }
 
@@ -175,7 +202,7 @@ impl MultThreadManager for PortionCore {
 impl MultTaskManager for PortionCore {
      #[inline(always)]
      fn task(&self, e: Task) -> Result<(), ErrAddTask> {
-          let lock_send = self._lock_send();
+          let lock_send = self.0._lock_send();
           
           /*{
                let waiting_threads = self.0.waiting_threads.load(Ordering::SeqCst);
@@ -212,7 +239,7 @@ impl MultTaskManager for PortionCore {
      }
 
      fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
-          let lock_send = self._lock_send();
+          let lock_send = self.0._lock_send();
           if let Err(e) = lock_send.send(CommPartion::TransferTask(arr)) {
                if let CommPartion::Task(e) = e.0 {
                     return Err( ErrAddTask::NotReady(e) );
@@ -239,7 +266,9 @@ impl MultDestruct for PortionCore {
                     del_threads += threads;
                     while threads > 0 {
                          match self.1.recv() {
-                              Ok(succ) => success += succ,
+                              Ok(end) => {
+                                   success += end.success;
+                              },
                               Err(e) => {
                                    err!("Portion: Failed to get channel for reporting closed threads. {:?}", e);
                                    

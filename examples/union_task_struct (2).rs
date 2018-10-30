@@ -1,9 +1,6 @@
 
 #[macro_use]
 extern crate cluMultThreading;
-
-
-use cluMultThreading::mcore_task::RunTaskExtension;
 use cluMultThreading::mcore::MultStat;
 use cluMultThreading::mcore::MultTaskManager;
 use cluMultThreading::mcore::MultDefault;
@@ -22,7 +19,7 @@ fn main() {
           .boxed();
      
 
-     let tasker = cluMultThreading::mcore_behavior::PortionCore::root();
+     let tasker = cluMultThreading::mcore_behavior::portion::PortionCore::root();
      for _a in 0..10 {
           let _e = tasker.task(all.clone());
           

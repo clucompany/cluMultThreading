@@ -2,11 +2,11 @@
 
 
 use mcore::MultStatic;
-use mcore_destruct::MultStaticDestruct;
+use mcore_destruct::StaticDestruct;
 use mcore::MultExtend;
-use mcore_destruct::MultRootDestruct;
+use mcore_destruct::RootDestruct;
 
-pub trait MultRawDefault where Self: Sized {
+pub trait MultRawDefault: Sized {
 	type NewRes;
 
      fn new() -> Self::NewRes /*where Self: Sized*/;
@@ -43,36 +43,36 @@ impl<'a, A: MultRawDefault<NewRes = T>, T> MultRawDefault for &'a A  where Self:
 
 pub trait MultDefault<T>: MultRawDefault<NewRes = T> where Self: Sized {
 	#[inline]
-	fn root<'a>() -> MultRootDestruct<'a, T> where T: MultExtend<'a> + Sized {
-		MultRootDestruct::new(
+	fn root<'a>() -> RootDestruct<'a, T> where T: MultExtend<'a> + Sized {
+		RootDestruct::new(
 			Self::new()
 		)
 	}
 	#[inline]
-	fn root_thread<'a>(c: usize) -> MultRootDestruct<'a, T> where T: MultExtend<'a> + Sized {
-		MultRootDestruct::new(
+	fn root_thread<'a>(c: usize) -> RootDestruct<'a, T> where T: MultExtend<'a> + Sized {
+		RootDestruct::new(
 			Self::thread(c)
 		)
 	}
 	#[inline]
-	fn root_sys<'a>() -> MultRootDestruct<'a, T> where T: MultExtend<'a> + Sized {
-		MultRootDestruct::new(
+	fn root_sys<'a>() -> RootDestruct<'a, T> where T: MultExtend<'a> + Sized {
+		RootDestruct::new(
 			Self::sys()
 		)
 	}
 
 	#[inline]
-	fn common() -> Option<MultStaticDestruct> where T: 'static + MultStatic<'static> + Sized {
+	fn common() -> Option<StaticDestruct> where T: 'static + MultStatic<'static> + Sized {
 		::mcore_static::set_move_mult_thread(Self::new())
 	}
 
 	#[inline]
-	fn common_thread(c: usize) -> Option<MultStaticDestruct> where T: 'static + MultStatic<'static> + Sized {
+	fn common_thread(c: usize) -> Option<StaticDestruct> where T: 'static + MultStatic<'static> + Sized {
 		::mcore_static::set_move_mult_thread(Self::thread(c))
 	}
 
 	#[inline]
-	fn common_sys() -> Option<MultStaticDestruct> where T: 'static + MultStatic<'static> + Sized {
+	fn common_sys() -> Option<StaticDestruct> where T: 'static + MultStatic<'static> + Sized {
 		::mcore_static::set_move_mult_thread(Self::sys())
 	}
 }
@@ -80,30 +80,30 @@ pub trait MultDefault<T>: MultRawDefault<NewRes = T> where Self: Sized {
 
 impl<'l, A: MultDefault<T>, T> MultDefault<T> for &'l A  where Self: Sized {
 	#[inline(always)]
-	fn root<'a>() -> MultRootDestruct<'a, T> where T: MultExtend<'a> + Sized {
+	fn root<'a>() -> RootDestruct<'a, T> where T: MultExtend<'a> + Sized {
 		A::root()
 	}
 	#[inline(always)]
-	fn root_thread<'a>(c: usize) -> MultRootDestruct<'a, T> where T: MultExtend<'a> + Sized {
+	fn root_thread<'a>(c: usize) -> RootDestruct<'a, T> where T: MultExtend<'a> + Sized {
 		A::root_thread(c)
 	}
 	#[inline(always)]
-	fn root_sys<'a>() -> MultRootDestruct<'a, T> where T: MultExtend<'a> + Sized {
+	fn root_sys<'a>() -> RootDestruct<'a, T> where T: MultExtend<'a> + Sized {
 		A::root_sys()
 	}
 
 	#[inline(always)]
-	fn common() -> Option<MultStaticDestruct> where T: 'static + MultStatic<'static> + Sized {
+	fn common() -> Option<StaticDestruct> where T: 'static + MultStatic<'static> + Sized {
 		A::common()
 	}
 
 	#[inline(always)]
-	fn common_thread(c: usize) -> Option<MultStaticDestruct> where T: 'static + MultStatic<'static> + Sized {
+	fn common_thread(c: usize) -> Option<StaticDestruct> where T: 'static + MultStatic<'static> + Sized {
 		A::common_thread(c)
 	}
 
 	#[inline(always)]
-	fn common_sys() -> Option<MultStaticDestruct> where T: 'static + MultStatic<'static> + Sized {
+	fn common_sys() -> Option<StaticDestruct> where T: 'static + MultStatic<'static> + Sized {
 		A::common_sys()
 	}
 }

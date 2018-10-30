@@ -13,8 +13,8 @@ pub trait MultTaskManager: Debug {
 		}
 		
 		Ok( disconnect )
-	}
-	*/
+	}*/
+	
 
 	fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
 		for a in arr {
