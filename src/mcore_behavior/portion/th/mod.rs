@@ -1,7 +1,7 @@
 
 
 pub mod thread_status;
-pub mod thead_run;
+//pub mod thead_run;
 pub mod thread;
 pub mod feedback;
 
@@ -9,7 +9,6 @@ pub mod feedback;
 
 use std::sync::Barrier;
 use mcore_behavior::portion::th::thread_status::ThreadStatus;
-use mcore_behavior::portion::th::thead_run::thread_run;
 use std::sync::mpsc::SyncSender;
 use mcore_behavior::portion::comm::CommPartion;
 use mcore::ErrDelThread;
@@ -18,6 +17,7 @@ use mcore::ErrAddThread;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use self::thread::PortionThread;
+use self::thread::IterEnd;
 
 #[derive(Debug)]
 pub struct PortionThreadManager {
@@ -109,11 +109,21 @@ impl PortionThreadManager {
                inf!("AStart thread, #{}, is_additional:{:?}", num, status);
                let flow_queue = self.flow_queue;
 
-               ::std::thread::spawn( enclose!((core, status) move || {
-                    let mut thread = PortionThread::new(num, status, core, flow_queue);
+               ::std::thread::spawn( enclose!((core, status, flow_queue) move || {
+                    let wait_count = core._add_count_threads_no_init();
+                    let mut thread = PortionThread::new(num, status, core, flow_queue, wait_count);
 
-                    while let None = thread.next() {
-                         
+                    let mut a;
+                    loop {
+                         a = thread.next();
+                         match a {
+                              None => {},
+                              Some(IterEnd::Allow) => break,
+                              Some(IterEnd::Barrier(b)) => {
+                                   b.wait();
+                                   break;
+                              },
+                         }
                     }
                }));            
           }
@@ -133,13 +143,25 @@ impl PortionThreadManager {
                let flow_queue = self.flow_queue;
                
                ::std::thread::spawn( enclose!((core, barrier, status) move || {
-                    let mut thread = PortionThread::new(num, status, core, flow_queue);
+                    let mut thread = PortionThread::new(num, status, core, flow_queue, core._add_count_threads_no_init());
                     barrier.wait();
                     drop(barrier);
 
-                    while let None = thread.next() {
-                         
+
+                    let mut a;
+                    loop {
+                         a = thread.next();
+                         match a {
+                              None => {},
+                              Some(IterEnd::Allow) => break,
+                              Some(IterEnd::Barrier(b)) => {
+                                   b.wait();
+                                   break;
+                              },
+                         }
                     }
+
+                    
                }));               
           }
           barrier.wait();

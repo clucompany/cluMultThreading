@@ -73,6 +73,11 @@ impl ArcPortionCore {
           WaitAtomic::new(&self.count_threads, Ordering::SeqCst)
      }
      #[inline(always)]
+     pub (crate) fn _get_count_threads<'a>(&'a self) -> usize {
+          self.count_threads.load(Ordering::SeqCst)
+     }
+
+     #[inline(always)]
      pub (crate) fn _add_count_threads_no_init<'a>(&'a self) -> WaitAtomic<'a> {
           WaitAtomic::new(&self.count_threads, Ordering::SeqCst)
      }
@@ -81,10 +86,22 @@ impl ArcPortionCore {
      pub (crate) fn _add_wait_threads<'a>(&'a self) -> WaitAtomic<'a> {
           WaitAtomic::new(&self.waiting_threads, Ordering::SeqCst)
      }
+
+     #[inline(always)]
+     pub (crate) fn _get_wait_threads<'a>(&'a self) -> usize {
+          self.waiting_threads.load(Ordering::SeqCst)
+     }
+
      #[inline(always)]
      pub (crate) fn _add_active_threads<'a>(&'a self) -> WaitAtomic<'a> {
           WaitAtomic::new(&self.active_threads, Ordering::SeqCst)
      }
+
+     #[inline(always)]
+     pub (crate) fn _get_active_threads<'a>(&'a self) -> usize {
+          self.active_threads.load(Ordering::SeqCst)
+     }
+
 
      #[inline(always)]
      pub (crate) fn _lock_send<'l>(&'l self) -> MutexGuard<'l, Sender<CommPartion>> {
@@ -260,6 +277,7 @@ impl MultDestruct for PortionCore {
                let mut threads;
                loop {
                     threads = self.count_threads();
+                    trace!("{}", threads);
                     if threads == 0 {
                          break;
                     }
@@ -267,6 +285,7 @@ impl MultDestruct for PortionCore {
                     while threads > 0 {
                          match self.1.recv() {
                               Ok(end) => {
+                                   println!("{:?}, threads: {}", end, threads);
                                    success += end.success;
                               },
                               Err(e) => {
