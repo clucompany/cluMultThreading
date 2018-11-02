@@ -13,11 +13,14 @@ static mut MULT_THREAD: &'static MultStatic = &MultEmptyCore;
 static LOGGER_INIT: Once = ONCE_INIT;
 
 
+///Get a link to the current scheduler
 #[inline(always)]
 pub fn as_mult_thread() -> &'static MultStatic<'static> {
      unsafe { MULT_THREAD }
 }
 
+
+///Change the current scheduler. If successful, the destructor returns, the destructor must be destroyed at the end of the program.
 pub fn set_mult_thread(mult: &'static MultStatic) -> Option<StaticDestruct> {
      let mut result = None;
 
@@ -32,7 +35,7 @@ pub fn set_mult_thread(mult: &'static MultStatic) -> Option<StaticDestruct> {
      result
 }
 
-#[inline]
+///Change the current scheduler. If successful, the destructor returns, the destructor must be destroyed at the end of the program.
 pub fn set_box_mult_thread(log: Box<MultStatic<'static>>) -> Option<StaticDestruct> {
      //WHY CLONE?, 
      //if re-initialization does not occur, then additional unsafe will not occur.
@@ -49,10 +52,9 @@ pub fn set_box_mult_thread(log: Box<MultStatic<'static>>) -> Option<StaticDestru
      result
 }
 
-#[inline]
-pub fn set_move_mult_thread<M: 'static + MultStatic<'static>>(log: M) -> Option<StaticDestruct> {
-     //WHY CLONE?, 
-     //if re-initialization does not occur, then additional unsafe will not occur.
+
+///Change the current scheduler. If successful, the destructor returns, the destructor must be destroyed at the end of the program.
+pub fn set_move_mult_thread<M: MultStatic<'static> + 'static>(log: M) -> Option<StaticDestruct> {
      let mut result = None;
 
      LOGGER_INIT.call_once(|| {
@@ -67,3 +69,4 @@ pub fn set_move_mult_thread<M: 'static + MultStatic<'static>>(log: M) -> Option<
 
      result
 }
+

@@ -30,8 +30,8 @@ impl<'a, M: MultExtend<'a>> MultStat for RootDestruct<'a, M> {
      }
 	
 	#[inline(always)]
-	fn def_count_threads(&self) -> usize {
-          self.0.def_count_threads()
+	fn start_count_threads(&self) -> usize {
+          self.0.start_count_threads()
      }
 
 	#[inline(always)]

@@ -6,6 +6,7 @@ use mcore_task::run::RunTask;
 use std::ops::FnMut;
 use std::fmt;
 
+///The task allows to execute Fn on the side of the scheduler.
 pub struct FnTask<F: Send + FnMut() + Sync>(F);
 
 

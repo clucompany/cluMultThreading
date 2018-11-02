@@ -18,11 +18,7 @@ pub mod mcore_behavior;
 
 pub use self::mcore_static::*;
 
-/*
-#[inline(always)]
-pub fn as_mult_thread() -> &'static MultStatic<'static> {
-     mcore_static::as_mult_thread()
-}
-*/
+
+
 
 

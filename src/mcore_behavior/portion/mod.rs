@@ -3,7 +3,7 @@ mod comm;
 mod th;
 mod wait_atomic;
 
-use mcore_behavior::portion::th::feedback::EndThreadInfo;
+use mcore_behavior::portion::th::thread_feedback::EndThreadInfo;
 use std::sync::mpsc::SyncSender;
 use mcore_behavior::portion::wait_atomic::WaitAtomic;
 use mcore_behavior::portion::th::PortionThreadManager;
@@ -185,7 +185,6 @@ impl MultRawDefault for PortionCore {
 impl MultStat for PortionCore {
      #[inline]
      fn count_threads(&self) -> usize {
-          //*self._lock_thread_manager().as_count_threads()
           self.0.count_threads.load(Ordering::SeqCst)
      }
 }
@@ -275,7 +274,7 @@ impl MultDestruct for PortionCore {
           let mut del_threads = 0;
           {
                let mut threads;
-               loop {
+               'l: loop {
                     threads = self.count_threads();
                     trace!("{}", threads);
                     if threads == 0 {
@@ -291,9 +290,8 @@ impl MultDestruct for PortionCore {
                               Err(e) => {
                                    err!("Portion: Failed to get channel for reporting closed threads. {:?}", e);
                                    
-                                   #[allow(deprecated)]
-                                   ::std::thread::sleep_ms(4000);
-                                   return;
+                                   //::std::thread::sleep_ms(4000);
+                                   break 'l;
                               },
                          };
                          
@@ -315,7 +313,7 @@ impl MultDestruct for PortionCore {
 }
 
 
-impl MultDefault<Self> for PortionCore {}
+impl<'a> MultDefault<Self> for PortionCore {}
 impl<'a> MultStatic<'a> for PortionCore {}
 impl<'a> MultExtend<'a> for PortionCore {}
 

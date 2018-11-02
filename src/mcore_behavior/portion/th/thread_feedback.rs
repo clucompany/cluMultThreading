@@ -1,17 +1,5 @@
 
 
-use mcore_behavior::portion::th::thread::PortionThread;
-use std::sync::Arc;
-use std::sync::Barrier;
-
-
-#[derive(Debug)]
-pub enum ThreadFeedBack {
-     EndBarrier(Arc<Barrier>),
-     EndAlways,
-}
-
-
 #[derive(Debug)]
 pub struct EndThreadInfo {
      pub num: usize,

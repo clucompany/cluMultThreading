@@ -1,15 +1,13 @@
 
 
-pub mod thread_status;
-//pub mod thead_run;
 pub mod thread;
-pub mod feedback;
+pub mod thread_feedback;
+pub mod thread_status;
 
 
 
 use std::sync::Barrier;
 use mcore_behavior::portion::th::thread_status::ThreadStatus;
-use std::sync::mpsc::SyncSender;
 use mcore_behavior::portion::comm::CommPartion;
 use mcore::ErrDelThread;
 use mcore_behavior::portion::ArcPortionCore;
@@ -101,7 +99,7 @@ impl PortionThreadManager {
      }
 
 
-     pub fn _async_add_thread(&mut self, c: usize, core: &Arc<ArcPortionCore>, status: ThreadStatus) -> usize {
+     pub fn _async_add_thread<'a, 'l>(&mut self, c: usize, core: &'a Arc<ArcPortionCore>, status: ThreadStatus) -> usize {
           core.count_threads.fetch_add(c, Ordering::SeqCst);
           core.all_count_threads.fetch_add(c, Ordering::SeqCst);
 
@@ -110,8 +108,7 @@ impl PortionThreadManager {
                let flow_queue = self.flow_queue;
 
                ::std::thread::spawn( enclose!((core, status, flow_queue) move || {
-                    let wait_count = core._add_count_threads_no_init();
-                    let mut thread = PortionThread::new(num, status, core, flow_queue, wait_count);
+                    let mut thread = PortionThread::new(num, status, &core, flow_queue, core._add_count_threads());
 
                     let mut a;
                     loop {
@@ -143,7 +140,7 @@ impl PortionThreadManager {
                let flow_queue = self.flow_queue;
                
                ::std::thread::spawn( enclose!((core, barrier, status) move || {
-                    let mut thread = PortionThread::new(num, status, core, flow_queue, core._add_count_threads_no_init());
+                    let mut thread = PortionThread::new(num, status, &core, flow_queue, core._add_count_threads());
                     barrier.wait();
                     drop(barrier);
 
@@ -165,7 +162,7 @@ impl PortionThreadManager {
                }));               
           }
           barrier.wait();
-
+          
           c
      }
 

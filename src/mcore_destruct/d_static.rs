@@ -1,5 +1,4 @@
 
-use std::ops::Deref;
 use mcore::MultStatic;
 use mcore::MultDestruct;
 use mcore::ErrAddTask;
@@ -23,7 +22,7 @@ impl StaticDestruct {
      }
 }
 
-
+/*
 impl Deref for StaticDestruct {
      type Target = MultStatic<'static>;
 
@@ -31,7 +30,7 @@ impl Deref for StaticDestruct {
      fn deref(&self) -> &Self::Target {
           self.as_self()
      }
-}
+}*/
 
 
 impl MultStat for StaticDestruct {
@@ -41,8 +40,8 @@ impl MultStat for StaticDestruct {
      }
 	
 	#[inline(always)]
-	fn def_count_threads(&self) -> usize {
-          self.as_self().def_count_threads()
+	fn start_count_threads(&self) -> usize {
+          self.as_self().start_count_threads()
      }
 
 	#[inline(always)]
@@ -80,6 +79,6 @@ impl<'a> MultStatic<'a> for StaticDestruct {}
 impl Drop for StaticDestruct {
      #[inline(always)]
      fn drop(&mut self) {
-          self.as_self().destruct();
+          self.destruct();
      }
 }

@@ -4,6 +4,7 @@ use mcore_task::Task;
 use std::fmt::Debug;
 
 
+///Task Scheduler Functions.
 pub trait MultTaskManager: Debug {
 	/*
 	fn wait<T: 'static>(&self, e: T) -> Result<WaitTaskDisconnect, ErrAddTask> where T: RunTask, Self: Sized {
@@ -30,6 +31,7 @@ pub trait MultTaskManager: Debug {
 }
 
 
+///Task Scheduler Functions.
 impl<'a, A: MultTaskManager> MultTaskManager for &'a A {
 	#[inline(always)]
 	fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {
@@ -42,6 +44,7 @@ impl<'a, A: MultTaskManager> MultTaskManager for &'a A {
 	}
 }
 
+///Task Scheduler Functions.
 impl<'a, A: MultTaskManager> MultTaskManager for &'a mut A {
 	#[inline(always)]
 	fn task_array(&self, arr: Vec<Task>) -> Result<(), ErrAddTask> {

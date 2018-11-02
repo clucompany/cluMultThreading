@@ -4,6 +4,7 @@
 use mcore_task::run::RunTask;
 
 #[derive(Debug)]
+///A task combines any two tasks.
 pub struct UnionTask<T: RunTask, T2: RunTask>(T, T2);
 
 

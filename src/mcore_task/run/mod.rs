@@ -14,36 +14,30 @@ pub use self::function::*;
 
 use std::fmt::Debug;
 
+///A trait that describes the desired behavior of the task.
 pub trait RunTask: Debug + Send + Sync {
      fn run(&mut self);
+
+     #[inline]
+     fn boxed(self) -> Box<Self> where Self: Sized {
+          Box::new(self)
+     }
+     
+     #[inline]
+     fn union<T: RunTask>(self, t: T) -> UnionTask<Self, T> where Self: Sized {
+          UnionTask::new(self, t)
+     }
+
+     #[inline]
+     fn wait<'a>(self) -> (WaitTask<'a, Self>, WaitTaskDisconnect) where Self: 'static + Sized {
+          WaitTask::new(self)
+     }
 }
+
 
 impl<'a, A: RunTask> RunTask for &'a mut A {
      #[inline(always)]
      fn run(&mut self) {
           (**self).run()
      }
-}
-
-
-pub trait RunTaskExtension: RunTask + Sized {
-     #[inline]
-     fn boxed(self) -> Box<Self> {
-          Box::new(self)
-     }
-     
-     #[inline]
-     fn union<T: RunTask>(self, t: T) -> UnionTask<Self, T> {
-          UnionTask::new(self, t)
-     }
-
-     #[inline]
-     fn wait<'a>(self) -> (WaitTask<'a, Self>, WaitTaskDisconnect) where Self: 'static {
-          WaitTask::new(self)
-     }
-}
-
-
-impl<'a, R: RunTask> RunTaskExtension for R {
-
 }

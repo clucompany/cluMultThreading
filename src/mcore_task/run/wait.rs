@@ -7,10 +7,10 @@ use mcore::ErrAddTask;
 use mcore::MultExtend;
 use std::sync::Mutex;
 use mcore_task::run::RunTask;
-use mcore_task::run::RunTaskExtension;
 
 
 #[derive(Debug)]
+///Task blocker accepts any other task and provides a remote descriptor that, when destroyed, causes the current thread to wait for the task to finish.
 pub struct WaitTask<'a, T: RunTask + 'a>(
      Arc<(Mutex<bool>, Condvar)>,
      T, 
@@ -59,9 +59,11 @@ impl<'a, T: RunTask + 'a> RunTask for WaitTask<'a, T> {
 
 
 #[derive(Debug)]
+///The deleted handle, when destroyed, blocks the current thread until the task is completed by the scheduler.
 pub struct WaitTaskDisconnect(Arc<(Mutex<bool>, Condvar)>);
 
 impl WaitTaskDisconnect {
+     ///Waiting for task execution in the scheduler.
      #[inline(always)]
      pub fn wait(self) {
 
@@ -76,7 +78,10 @@ impl Drop for WaitTaskDisconnect {
                Err(e) => e.into_inner(),
           };
           while !*lock {
-               lock = (self.0).1.wait(lock).unwrap();
+               lock = match (self.0).1.wait(lock) {
+                    Ok(a) => a,
+                    Err(e) => e.into_inner(),
+               };
           }
      }
 }

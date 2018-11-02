@@ -1,18 +1,19 @@
 
 
+use std::marker::PhantomData;
 use mcore_behavior::portion::wait_atomic::WaitAtomic;
 use std::sync::Barrier;
 use mcore_behavior::portion::comm::CommPartion;
-use mcore_behavior::portion::th::feedback::EndThreadInfo;
+use mcore_behavior::portion::th::thread_feedback::EndThreadInfo;
 use std::sync::Arc;
 use mcore_behavior::portion::ArcPortionCore;
 use mcore_behavior::portion::th::thread_status::ThreadStatus;
-
+use std::time::Duration;
 
 
 #[derive(Debug)]
 pub struct PortionThread<'a> {
-     _count_thread: WaitAtomic<'a>,
+     _wait: WaitAtomic<'a>,
      num: usize,
      status: ThreadStatus,
 
@@ -20,13 +21,13 @@ pub struct PortionThread<'a> {
      flow_queue: usize,
 
      turn: Vec< CommPartion >,
-     core: Arc<ArcPortionCore>,
+     core: &'a Arc<ArcPortionCore>,
 }
 
 impl<'a> PortionThread<'a> {
-     pub fn new(num: usize, status: ThreadStatus, core: Arc<ArcPortionCore>, flow_queue: usize, count_thread: WaitAtomic<'a>) -> Self {
+     pub fn new(num: usize, status: ThreadStatus, core: &'a Arc<ArcPortionCore>, flow_queue: usize, wait_thread: WaitAtomic<'a>) -> Self {
           Self {
-               _count_thread: count_thread,
+               _wait: wait_thread,
                num: num,
                status: status,
 
@@ -43,29 +44,82 @@ impl<'a> PortionThread<'a> {
 impl<'a> Iterator for PortionThread<'a> {
      type Item = IterEnd;
      fn next(&mut self) -> Option<Self::Item> {
-          let wait = self.core._add_wait_threads();
-          let recv = self.core._lock_recv();
-
-          for _a in 0..self.flow_queue {
-               if let Ok(a) = recv.try_recv() {
-                    self.turn.push(a);
-                    continue;
+          let mut is_kill = None;
+          
+          {
+               let wait = self.core._add_wait_threads();
+               let recv = self.core._lock_recv();
+               for _a in 0..self.flow_queue {
+                    if let Ok(a) = recv.try_recv() {
+                         self.turn.push(a);
+                         continue;
+                    }
+                    break;
                }
-               break;
-          }
-          if self.turn.len() == 0 {
-               if self.flow_queue > 1 {
-                    let f = self.flow_queue - 1;
-                    for _a in 0..f {
-                         if let Ok(a) = recv.try_recv() {
-                              self.turn.push(a);
-                              continue;
-                         }
-                         break;
+               if self.turn.len() == 0 {
+                    match self.status {
+                         ThreadStatus::Master => {
+                              match recv.recv() {
+                                   Ok(a) => {
+                                        self.turn.push(a);
+                                   },
+                                   Err(e) => {
+                                        trace!("Unknown Beh. {:?}", e);
+                                        return Some(IterEnd::Allow);
+                                   },
+                              }
+                         },
+                         ThreadStatus::Hand => {
+                              match recv.recv_timeout(Duration::from_secs(3)) {
+                                   Ok(a) => {
+                                        self.turn.push(a);
+                                   },
+                                   Err(e) => {
+                                        trace!("Unknown Beh. {:?}", e);
+                                        return Some(IterEnd::Allow);
+                                   },
+                              }
+                         },
+                         ThreadStatus::Power => {
+                              match recv.recv_timeout(Duration::from_secs(1)) {
+                                   Ok(a) => {
+                                        self.turn.push(a);
+                                   },
+                                   Err(e) => {
+                                        trace!("Unknown Beh. {:?}", e);
+                                        return Some(IterEnd::Allow);
+                                   },
+                              }
+                         },
+                    }
+
+                    match self.flow_queue {
+                         0 => {
+
+                         },
+                         1 => {
+                              
+                         },
+                         _ => {
+                              let f = self.flow_queue - 1;
+                              for _a in 0..f {
+                                   match recv.try_recv() {
+                                        Ok(a) => {
+                                             self.turn.push(a);
+                                             continue;
+                                        },
+                                        Err(e) => {
+                                             trace!("Unknown Beh. {:?}", e);
+                                             is_kill = Some(IterEnd::Allow);
+                                             break;
+                                        },
+                                   }
+                              }
+                         },
                     }
                }
+               drop( wait );
           }
-          drop(wait);
 
           let wait_active = self.core._add_active_threads();
           {
@@ -81,7 +135,7 @@ impl<'a> Iterator for PortionThread<'a> {
                }
           }
 
-          let mut is_kill = None;
+          
 
           while let Some(recv) = self.turn.pop() {
                match recv {
@@ -126,7 +180,7 @@ impl<'a> Iterator for PortionThread<'a> {
 
           drop(wait_active);
 
-          
+          trace!("{:?}", is_kill);
           is_kill
      }
 }
@@ -134,6 +188,7 @@ impl<'a> Iterator for PortionThread<'a> {
 
 impl<'a> Drop for PortionThread<'a> {
      fn drop(&mut self) {
+          trace!("Kill");
           let end: EndThreadInfo = self.into();
 
           {

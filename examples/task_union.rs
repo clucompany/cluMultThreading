@@ -1,6 +1,9 @@
 
 #[macro_use]
 extern crate cluMultThreading;
+#[macro_use]
+extern crate cluLog;
+
 use cluMultThreading::mcore::MultStat;
 use cluMultThreading::mcore::MultTaskManager;
 use cluMultThreading::mcore::MultDefault;
@@ -8,7 +11,8 @@ use cluMultThreading::mcore_task::RunTask;
 use cluMultThreading::mcore_task::EmptyTask;
 
 fn main() {
-
+     init_clulog!();
+     
      let all = EmptyTask::new()
           .union(EmptyTask::new())
           .union(EmptyTask::new())
@@ -19,13 +23,14 @@ fn main() {
           .boxed();
      
 
-     let tasker = cluMultThreading::mcore_behavior::portion::PortionCore::root();
+     let tasker = cluMultThreading::mcore_behavior::PortionCore::common().unwrap();
      for _a in 0..10 {
           let _e = tasker.task(all.clone());
-          
-          //let _e = tasker.task(all.boxed());
      }
      println!("Count threads: {}", tasker.count_threads());
+
+     drop(tasker);
+     trace!("1");
 }
 
 
